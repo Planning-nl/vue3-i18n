@@ -27,10 +27,11 @@
     "lint-staged": {
         "*.{js,jsx,ts,tsx,vue}": "eslint --fix"
     },
-    "dependencies": {
+    "peerDependencies": {
         "@vue/reactivity": "^3.0.2"
     },
     "devDependencies": {
+        "@vue/reactivity": "^3.0.2",
         "@types/jest": "^26.0.15",
         "@planning.nl/eslint-config": "^1.0.6",
         "@planning.nl/webpack-config": "^1.0.4",

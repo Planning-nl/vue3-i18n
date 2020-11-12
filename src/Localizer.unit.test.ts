@@ -1,11 +1,10 @@
 import { patch } from "./patch";
 import { getLocale, locale, withLocale } from "./locale";
-import { l, local, LocaleItem } from "./Localizer";
-import { message, MULTIPLE, noun } from "./message";
+import { l, local } from "./Localizer";
 import { number } from "./number";
 
 describe("Localizer", () => {
-    const L = l(createMap(["nl", "nl-NL", "de-DE", "de-DE-BY"], "fallback"));
+    const L = l({ nl: "nl", "nl-NL": "nl-NL", "de-DE": "de-DE", "de-DE-BY": "de-DE-BY", fallback: "fallback" });
 
     afterEach(() => {
         locale.value = undefined;
@@ -83,10 +82,10 @@ describe("Localizer", () => {
         const L = {
             main: {
                 value: l({
-                    en: { v: "main en", n: "no main en", p: "Mains En Custom", pc: "{n} main ens" },
+                    en: "main en",
                     "en-GB": "main en GB",
                     fr: "main fr",
-                    nl: { v: "main nl", p: "mains nl" },
+                    nl: "main nl",
                 }),
                 sub: {
                     a: l({ "": "sub a generic", en: "sub a en", nl: "sub a nl" }),
@@ -113,60 +112,6 @@ describe("Localizer", () => {
 
                 // Use first specified value.
                 expect(local(L.main.sub.a)).toBe(L.main.sub.a[""]);
-            });
-        });
-
-        describe("message", () => {
-            test("ucfirst", () => {
-                locale.value = "en";
-                expect(message(L.main.sub.a, true)).toBe("Sub A En");
-            });
-            test("ucfirst, default impl", () => {
-                locale.value = "en";
-                expect(message(L.main.value, true)).toBe("Main En");
-            });
-
-            describe("noun", () => {
-                test("basic", () => {
-                    locale.value = "en";
-                    expect(noun(L.main.value)).toBe("main en");
-                });
-
-                describe("noun", () => {
-                    test("plural", () => {
-                        locale.value = "en";
-                        expect(noun(L.main.value, MULTIPLE)).toBe("Mains En Custom");
-                    });
-
-                    test("none", () => {
-                        locale.value = "en";
-                        expect(noun(L.main.value, 0)).toBe("no main en");
-                    });
-
-                    test("count", () => {
-                        locale.value = "en";
-                        expect(noun(L.main.value, 3)).toBe("3 main ens");
-                    });
-
-                    test("plural, not existing", () => {
-                        locale.value = "en";
-
-                        // Fallback to single value.
-                        expect(noun(L.main.sub.a, MULTIPLE)).toBe("sub a en");
-                    });
-
-                    test("plural, locale not having plural", () => {
-                        locale.value = "fr";
-
-                        // Use fallback language.
-                        expect(noun(L.main.value, MULTIPLE)).toBe("main fr");
-                    });
-
-                    test("ucfirst and plural", () => {
-                        locale.value = "en";
-                        expect(noun(L.main.value, MULTIPLE, true)).toBe("Mains En Custom");
-                    });
-                });
             });
         });
 
@@ -217,12 +162,3 @@ describe("Localizer", () => {
         expect(withLocale("nl", () => local(Base.multi.sub))).toBe("Nederlands");
     });
 });
-
-function createMap(patterns: string[], fallback?: string) {
-    const results: LocaleItem<string> = {};
-    patterns.forEach((pattern) => {
-        results[pattern] = pattern;
-    });
-    results.fallback = fallback;
-    return results;
-}

@@ -88,7 +88,7 @@ describe("Localizer", () => {
                     nl: "main nl",
                 }),
                 sub: {
-                    a: l({ "": "sub a generic", en: "sub a en", nl: "sub a nl" }),
+                    a: l({ fallback: "sub a generic", en: "sub a en", nl: "sub a nl" }),
                 },
             },
             all: l({ en: "all", fr: "tous", nl: "alle" }),
@@ -111,7 +111,7 @@ describe("Localizer", () => {
                 locale.value = "it";
 
                 // Use first specified value.
-                expect(local(L.main.sub.a)).toBe(L.main.sub.a[""]);
+                expect(local(L.main.sub.a)).toBe(L.main.sub.a.fallback);
             });
         });
 

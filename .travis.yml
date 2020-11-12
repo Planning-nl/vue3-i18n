@@ -1,0 +1,23 @@
+language: node_js
+node_js:
+    - "12"
+
+stages:
+    - build
+    - test
+    - verify
+
+install:
+    - yarn install
+
+matrix:
+    include:
+        -   name: build
+            stage: build
+            script:
+                - yarn run build
+
+        -   name: lint
+            stage: verify
+            script:
+                - yarn run lint

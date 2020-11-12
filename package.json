@@ -1,0 +1,64 @@
+{
+    "name": "planning-i18n",
+    "description": "Planning.nl i18n",
+    "version": "0.0.1",
+    "author": "Planning.nl, Bas van Meurs, Robbin Baauw",
+    "bugs": {
+        "url": "https://github.com/Planning-nl/i18n/issues",
+        "email": "support@planning.nl"
+    },
+    "scripts": {
+        "build": "yarn build:cjs & yarn build:esm & yarn build:umd",
+        "watch:cjs": "tsc --watch --module commonjs --outDir cjs",
+        "build:cjs": "tsc --module commonjs --outDir cjs",
+        "watch:esm": "tsc --watch --module es2015 --outDir esm",
+        "build:esm": "tsc --module es2015 --outDir esm",
+        "build:umd": "NODE_ENV=production webpack --progress --display-error-details",
+        "lint": "eslint 'src/**/*.ts'",
+        "lint:fix": "eslint --fix **/*.ts",
+        "test": "jest"
+    },
+    "husky": {
+        "hooks": {
+            "pre-commit": "lint-staged"
+        }
+    },
+    "lint-staged": {
+        "*.{js,jsx,ts,tsx,vue}": "eslint --fix"
+    },
+    "devDependencies": {
+        "@types/jest": "^26.0.15",
+        "@planning.nl/eslint-config": "^1.0.6",
+        "@planning.nl/webpack-config": "^1.0.4",
+        "@typescript-eslint/eslint-plugin": "^4.7.0",
+        "@typescript-eslint/parser": "^4.7.0",
+        "eslint": "^7.13.0",
+        "eslint-plugin-prettier": "^3.1.4",
+        "husky": "^4.3.0",
+        "jest": "26.6.3",
+        "lint-staged": "^10.5.1",
+        "prettier": "^2.1.2",
+        "ts-loader": "^8.0.11",
+        "ts-jest": "26.4.4",
+        "typescript": "^4.0.5"
+    },
+    "files": [
+        "cjs/**",
+        "esm/**",
+        "dist/**",
+        "src/**",
+        "types/**"
+    ],
+    "homepage": "https://github.com/Planning-nl/i18n#readme",
+    "keywords": [],
+    "license": "apache",
+    "main": "cjs/index.js",
+    "module": "esm/index.js",
+    "jsdelivr": "dist/planning-i18n.js",
+    "unpkg": "dist/planning-i18n.js",
+    "repository": "github:Planning-nl/i18n",
+    "types": "types/index.d.ts",
+    "engines": {
+        "node": ">=8.0.0"
+    }
+}

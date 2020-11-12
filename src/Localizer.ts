@@ -1,9 +1,28 @@
 import { getLocale } from "./locale";
+import { ref } from "@vue/reactivity";
 
 /**
  * Returns the local value for the item.
  */
 export function local<T extends LocalValue>(item: LocaleItem<T>, locale = getLocale()): T {
+    let result = getLocal(item, locale);
+
+    if (result === undefined) {
+        const fallback = fallbackLocale.value;
+        if (fallback) {
+            result = getLocal(item, fallback);
+        }
+    }
+
+    if (result === undefined) {
+        // Use first item.
+        result = getFirstLocaleValue(item)!;
+    }
+
+    return result;
+}
+
+function getLocal<T extends LocalValue>(item: LocaleItem<T>, locale: string): T | undefined {
     const match = item[locale];
     if (match !== undefined) {
         // Quick path: perfect match.
@@ -22,11 +41,12 @@ export function local<T extends LocalValue>(item: LocaleItem<T>, locale = getLoc
         if (fallback !== undefined) {
             return fallback;
         } else {
-            // Use first item.
-            return getFirstLocaleValue(item)!;
+            return undefined!;
         }
     }
 }
+
+export const fallbackLocale = ref("en");
 
 function getFirstLocaleValue<T>(item: LocaleItem<T>): T | undefined {
     const firstKey = Object.keys(item)[0];

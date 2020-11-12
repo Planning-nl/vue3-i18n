@@ -8,7 +8,7 @@
         "email": "support@planning.nl"
     },
     "scripts": {
-        "build": "yarn build:cjs & yarn build:esm & yarn build:umd",
+        "build": "yarn build:cjs && yarn build:esm && yarn build:umd",
         "watch:cjs": "tsc --watch --module commonjs --outDir cjs",
         "build:cjs": "tsc --module commonjs --outDir cjs",
         "watch:esm": "tsc --watch --module es2015 --outDir esm",
@@ -16,6 +16,7 @@
         "build:umd": "NODE_ENV=production webpack --progress --display-error-details",
         "lint": "eslint 'src/**/*.ts'",
         "lint:fix": "eslint --fix **/*.ts",
+        "prepare": "yarn build",
         "test": "jest"
     },
     "husky": {

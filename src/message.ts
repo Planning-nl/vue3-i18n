@@ -44,7 +44,7 @@ function messageToString(message: MessageValue) {
 // Describes which ucfirst strategy is applied. May be localized.
 export const rules = reactive({
     ucfirst: l({
-        "": (v) => {
+        fallback: (v) => {
             return messageToString(v)
                 .split(" ")
                 .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
@@ -52,7 +52,7 @@ export const rules = reactive({
         },
     }) as LocaleItem<(v: MessageValue) => MessageValue>,
     pluralization: l({
-        "": (message, count) => {
+        fallback: (message, count) => {
             let value = message.v;
             // Simple pluralization.
             if (count === 0 && message.n) {
@@ -68,9 +68,7 @@ export const rules = reactive({
                     value = message.p;
                 }
             }
-            if (typeof value === "string") {
-                value = value.replace("{n}", "" + count);
-            }
+            value = value.replace("{n}", "" + count);
             return value;
         },
     }) as LocaleItem<(message: MessageObject, count: number) => MessageValue>,

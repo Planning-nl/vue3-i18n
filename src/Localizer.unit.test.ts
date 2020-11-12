@@ -1,11 +1,11 @@
 import { patch } from "./patch";
 import { getLocale, locale, withLocale } from "./locale";
-import { l, local } from "./Localizer";
+import { l, local, LocaleItem } from "./Localizer";
 import { message, MULTIPLE, noun } from "./message";
 import { number } from "./number";
 
 describe("Localizer", () => {
-    const L = l(createMap(["nl", "nl-NL", "de-DE", "de-DE-BY", ""]));
+    const L = l(createMap(["nl", "nl-NL", "de-DE", "de-DE-BY"], "fallback"));
 
     afterEach(() => {
         locale.value = undefined;
@@ -30,12 +30,12 @@ describe("Localizer", () => {
         describe("locale matching", () => {
             test("empty locale", () => {
                 locale.value = "";
-                expect(local(L)).toBe("");
+                expect(local(L)).toBe("fallback");
             });
 
             test("unknown full locale", () => {
                 locale.value = "gr-GR-Cyrl";
-                expect(local(L)).toBe("");
+                expect(local(L)).toBe("fallback");
             });
 
             describe("language", () => {
@@ -46,7 +46,7 @@ describe("Localizer", () => {
 
                 test("[language]", () => {
                     locale.value = "gr";
-                    expect(local(L)).toBe("");
+                    expect(local(L)).toBe("fallback");
                 });
             });
 
@@ -218,10 +218,11 @@ describe("Localizer", () => {
     });
 });
 
-function createMap(patterns: string[]) {
-    const results: Record<string, string> = {};
+function createMap(patterns: string[], fallback?: string) {
+    const results: LocaleItem<string> = {};
     patterns.forEach((pattern) => {
         results[pattern] = pattern;
     });
+    results.fallback = fallback;
     return results;
 }

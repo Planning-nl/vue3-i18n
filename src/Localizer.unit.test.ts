@@ -1,7 +1,6 @@
 import { patch } from "./patch";
 import { getLocale, locale, withLocale } from "./locale";
-import { l, local } from "./Localizer";
-import { number } from "./number";
+import { l, t } from "./Localizer";
 
 describe("Localizer", () => {
     const L = l({ nl: "nl", "nl-NL": "nl-NL", "de-DE": "de-DE", "de-DE-BY": "de-DE-BY", fallback: "fallback" });
@@ -29,50 +28,50 @@ describe("Localizer", () => {
         describe("locale matching", () => {
             test("empty locale", () => {
                 locale.value = "";
-                expect(local(L)).toBe("fallback");
+                expect(t(L)).toBe("fallback");
             });
 
             test("unknown full locale", () => {
                 locale.value = "gr-GR-Cyrl";
-                expect(local(L)).toBe("fallback");
+                expect(t(L)).toBe("fallback");
             });
 
             describe("language", () => {
                 test("language", () => {
                     locale.value = "nl";
-                    expect(local(L)).toBe("nl");
+                    expect(t(L)).toBe("nl");
                 });
 
                 test("[language]", () => {
                     locale.value = "gr";
-                    expect(local(L)).toBe("fallback");
+                    expect(t(L)).toBe("fallback");
                 });
             });
 
             describe("region", () => {
                 test("language-region", () => {
                     locale.value = "nl-NL";
-                    expect(local(L)).toBe("nl-NL");
+                    expect(t(L)).toBe("nl-NL");
                 });
 
                 test("language-[region]", () => {
                     locale.value = "nl-BE";
-                    expect(local(L)).toBe("nl");
+                    expect(t(L)).toBe("nl");
                 });
 
                 test("language-region", () => {
                     locale.value = "de-DE";
-                    expect(local(L)).toBe("de-DE");
+                    expect(t(L)).toBe("de-DE");
                 });
 
                 test("language-region-subregion", () => {
                     locale.value = "de-DE-BY";
-                    expect(local(L)).toBe("de-DE-BY");
+                    expect(t(L)).toBe("de-DE-BY");
                 });
 
                 test("language-region-[subregion]", () => {
                     locale.value = "de-DE-NW";
-                    expect(local(L)).toBe("de-DE");
+                    expect(t(L)).toBe("de-DE");
                 });
             });
         });
@@ -97,29 +96,21 @@ describe("Localizer", () => {
         describe("local", () => {
             test("main locale", () => {
                 locale.value = "en";
-                expect(local(L.main.value)).toBe(L.main.value["en"]);
+                expect(t(L.main.value)).toBe(L.main.value["en"]);
             });
             test("sub locale, not existing", () => {
                 locale.value = "en-US";
-                expect(local(L.main.value)).toBe(L.main.value["en"]);
+                expect(t(L.main.value)).toBe(L.main.value["en"]);
             });
             test("sub locale, existing", () => {
                 locale.value = "en-GB";
-                expect(local(L.main.value)).toBe(L.main.value["en-GB"]);
+                expect(t(L.main.value)).toBe(L.main.value["en-GB"]);
             });
             test("fallback to generic locale", () => {
                 locale.value = "it";
 
                 // Use first specified value.
-                expect(local(L.main.sub.a)).toBe(L.main.sub.a.fallback);
-            });
-        });
-
-        describe("number", () => {
-            test("response", () => {
-                locale.value = "nl-NL";
-                const v = 99999.123;
-                expect(number(v)).toBe(Intl.NumberFormat("nl-NL").format(v));
+                expect(t(L.main.sub.a)).toBe(L.main.sub.a.fallback);
             });
         });
     });
@@ -139,12 +130,12 @@ describe("Localizer", () => {
             },
         };
 
-        expect(withLocale("nl", () => local(Base.multi.main))).toBe("Nederlands");
-        expect(withLocale("de-DE-BY", () => local(Base.multi.main))).toBe("Bayern");
-        expect(withLocale("de-DE-NW", () => local(Base.multi.main))).toBe("Deutsch");
-        expect(withLocale("fr-BE", () => local(Base.multi.main))).toBe("-");
+        expect(withLocale("nl", () => t(Base.multi.main))).toBe("Nederlands");
+        expect(withLocale("de-DE-BY", () => t(Base.multi.main))).toBe("Bayern");
+        expect(withLocale("de-DE-NW", () => t(Base.multi.main))).toBe("Deutsch");
+        expect(withLocale("fr-BE", () => t(Base.multi.main))).toBe("-");
 
-        expect(withLocale("nl", () => local(Base.multi.sub))).toBe("Nederlands");
+        expect(withLocale("nl", () => t(Base.multi.sub))).toBe("Nederlands");
 
         patch(Base, {
             multi: {
@@ -156,9 +147,9 @@ describe("Localizer", () => {
             },
         });
 
-        expect(withLocale("nl", () => local(Base.multi.main))).toBe("Nederlands 2");
-        expect(withLocale("de-DE", () => local(Base.multi.main))).toBe("Deutsch");
-        expect(withLocale("de-DE-NW", () => local(Base.multi.main))).toBe("Nordrhein Westfalen");
-        expect(withLocale("nl", () => local(Base.multi.sub))).toBe("Nederlands");
+        expect(withLocale("nl", () => t(Base.multi.main))).toBe("Nederlands 2");
+        expect(withLocale("de-DE", () => t(Base.multi.main))).toBe("Deutsch");
+        expect(withLocale("de-DE-NW", () => t(Base.multi.main))).toBe("Nordrhein Westfalen");
+        expect(withLocale("nl", () => t(Base.multi.sub))).toBe("Nederlands");
     });
 });

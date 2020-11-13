@@ -56,9 +56,7 @@ function getFirstLocaleValue<T>(item: LocaleItem<T>): T | undefined {
 export type LocalValue = any | LocalFunction;
 export type LocalFunction = (...args: any[]) => any;
 
-export type LocaleItem<T extends LocalValue> = Record<string, T> & {
-    fallback?: T;
-};
+export type LocaleItem<T extends LocalValue> = Record<string, T>;
 
 /**
  * Creates an Item for the specified ItemLocales.

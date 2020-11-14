@@ -1,6 +1,7 @@
 import { patch } from "./patch";
 import { getLocale, locale, withLocale } from "./locale";
 import { l, t } from "./Localizer";
+import { createLocaleProxy } from "./proxy";
 
 describe("Localizer", () => {
     const L = l({ nl: "nl", "nl-NL": "nl-NL", "de-DE": "de-DE", "de-DE-BY": "de-DE-BY", fallback: "fallback" });
@@ -96,21 +97,21 @@ describe("Localizer", () => {
         describe("local", () => {
             test("main locale", () => {
                 locale.value = "en";
-                expect(t(L.main.value)).toBe(L.main.value["en"]);
+                expect(t(L.main.value)).toBe(L.main.value.locales["en"]);
             });
             test("sub locale, not existing", () => {
                 locale.value = "en-US";
-                expect(t(L.main.value)).toBe(L.main.value["en"]);
+                expect(t(L.main.value)).toBe(L.main.value.locales["en"]);
             });
             test("sub locale, existing", () => {
                 locale.value = "en-GB";
-                expect(t(L.main.value)).toBe(L.main.value["en-GB"]);
+                expect(t(L.main.value)).toBe(L.main.value.locales["en-GB"]);
             });
             test("fallback to generic locale", () => {
                 locale.value = "it";
 
                 // Use first specified value.
-                expect(t(L.main.sub.a)).toBe(L.main.sub.a.fallback);
+                expect(t(L.main.sub.a)).toBe(L.main.sub.a.locales.fallback);
             });
         });
     });
@@ -151,5 +152,68 @@ describe("Localizer", () => {
         expect(withLocale("de-DE", () => t(Base.multi.main))).toBe("Deutsch");
         expect(withLocale("de-DE-NW", () => t(Base.multi.main))).toBe("Nordrhein Westfalen");
         expect(withLocale("nl", () => t(Base.multi.sub))).toBe("Nederlands");
+    });
+
+    describe("locale proxy", () => {
+        const Base = {
+            main: l({
+                nl: "Nederlands",
+                "de-DE-BY": "Bayern",
+                "de-DE": "Deutsch",
+                fallback: "-",
+            }),
+            primitive: 2,
+            multi: {
+                level: l({
+                    nl: "Multi",
+                    fallback: "-",
+                }),
+            },
+        };
+
+        test("create", () => {
+            const proxy = createLocaleProxy(Base);
+        });
+
+        test("get locale", () => {
+            const proxy = createLocaleProxy(Base);
+            withLocale("de-DE-NW", () => {
+                expect(proxy.main).toBe("Deutsch");
+            });
+        });
+
+        test("get deep locale", () => {
+            const proxy = createLocaleProxy(Base);
+            withLocale("nl-NL", () => {
+                expect(proxy.multi.level).toBe("Multi");
+            });
+        });
+
+        test("get primitive value", () => {
+            const proxy = createLocaleProxy(Base);
+            expect(proxy.primitive).toBe(2);
+        });
+
+        test("get object value", () => {
+            const proxy = createLocaleProxy(Base);
+            expect(Object.keys(proxy.multi)).toEqual(["level"]);
+        });
+
+        test("set value produces error", () => {
+            const proxy = createLocaleProxy(Base);
+            expect(() => (proxy.main = "newValue")).toThrowError("Set is not allowed");
+        });
+
+        test("delete value produces error", () => {
+            const proxy = createLocaleProxy(Base);
+            expect(() => delete (proxy as any).main).toThrowError("Delete is not allowed");
+        });
+
+        test("unknown path", () => {
+            const proxy = createLocaleProxy(Base);
+            const v = (proxy as any).bad.path;
+            const s = "" + v;
+            expect(s).toBe("Unknown locale proxy path: bad.path");
+        });
     });
 });

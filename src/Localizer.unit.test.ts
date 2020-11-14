@@ -1,7 +1,8 @@
 import { patch } from "./patch";
 import { getLocale, locale, withLocale } from "./locale";
-import { l, t } from "./Localizer";
+import { l, LocaleItem, t } from "./Localizer";
 import { createLocaleProxy } from "./proxy";
+import { computed, reactive } from "@vue/reactivity";
 
 describe("Localizer", () => {
     const L = l({ nl: "nl", "nl-NL": "nl-NL", "de-DE": "de-DE", "de-DE-BY": "de-DE-BY", fallback: "fallback" });
@@ -214,6 +215,30 @@ describe("Localizer", () => {
             const v = (proxy as any).bad.path;
             const s = "" + v;
             expect(s).toBe("Unknown locale proxy path: bad.path");
+        });
+
+        describe("reactivity", () => {
+            test("wrap reactive proxy in locale proxy", () => {
+                locale.value = "nl-NL";
+                const base = reactive(Base);
+                const proxy = createLocaleProxy(base);
+                expect(proxy.multi.level).toBe("Multi");
+            });
+
+            test("locale proxy should react to reactivity", () => {
+                locale.value = "nl-NL";
+                const base = reactive(Base);
+                const proxy = createLocaleProxy(base);
+
+                const c = computed(() => proxy.multi.level);
+                expect(c.value).toBe("Multi");
+
+                base.multi.level.patch(
+                    new LocaleItem<string>({ nl: "Multi 2" }),
+                );
+
+                expect(c.value).toBe("Multi 2");
+            });
         });
     });
 });

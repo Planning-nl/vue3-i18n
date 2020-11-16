@@ -1,7 +1,7 @@
 {
     "name": "@planning.nl/i18n",
     "description": "Planning.nl i18n",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "author": "Planning.nl, Bas van Meurs, Robbin Baauw",
     "bugs": {
         "url": "https://github.com/Planning-nl/i18n/issues",

@@ -1,7 +1,7 @@
 import { patch } from "./patch";
 import { getLocale, locale, withLocale } from "./locale";
 import { l, LocaleItem, t } from "./Localizer";
-import { createLocaleProxy } from "./proxy";
+import { getResolver } from "./proxy";
 import { computed, reactive } from "@vue/reactivity";
 
 describe("Localizer", () => {
@@ -173,62 +173,62 @@ describe("Localizer", () => {
         };
 
         test("create", () => {
-            const proxy = createLocaleProxy(Base);
+            const proxy = getResolver(Base);
         });
 
         test("get locale", () => {
-            const proxy = createLocaleProxy(Base);
+            const proxy = getResolver(Base);
             withLocale("de-DE-NW", () => {
                 expect(proxy.main).toBe("Deutsch");
             });
         });
 
         test("get deep locale", () => {
-            const proxy = createLocaleProxy(Base);
+            const proxy = getResolver(Base);
             withLocale("nl-NL", () => {
                 expect(proxy.multi.level).toBe("Multi");
             });
         });
 
         test("get primitive value", () => {
-            const proxy = createLocaleProxy(Base);
+            const proxy = getResolver(Base);
             expect(proxy.primitive).toBe(2);
         });
 
         test("get object value", () => {
-            const proxy = createLocaleProxy(Base);
+            const proxy = getResolver(Base);
             expect(Object.keys(proxy.multi)).toEqual(["level"]);
         });
 
         test("set value produces error", () => {
-            const proxy = createLocaleProxy(Base);
+            const proxy = getResolver(Base);
             expect(() => (proxy.main = "newValue")).toThrowError("Set is not allowed");
         });
 
         test("delete value produces error", () => {
-            const proxy = createLocaleProxy(Base);
+            const proxy = getResolver(Base);
             expect(() => delete (proxy as any).main).toThrowError("Delete is not allowed");
         });
 
         test("unknown path", () => {
-            const proxy = createLocaleProxy(Base);
+            const proxy = getResolver(Base);
             const v = (proxy as any).bad.path;
             const s = "" + v;
-            expect(s).toBe("Unknown locale proxy path: bad.path");
+            expect(s).toBe("[*.bad.path]");
         });
 
         describe("reactivity", () => {
             test("wrap reactive proxy in locale proxy", () => {
                 locale.value = "nl-NL";
                 const base = reactive(Base);
-                const proxy = createLocaleProxy(base);
+                const proxy = getResolver(base);
                 expect(proxy.multi.level).toBe("Multi");
             });
 
             test("locale proxy should react to reactivity", () => {
                 locale.value = "nl-NL";
                 const base = reactive(Base);
-                const proxy = createLocaleProxy(base);
+                const proxy = getResolver(base);
 
                 const c = computed(() => proxy.multi.level);
                 expect(c.value).toBe("Multi");
@@ -238,6 +238,20 @@ describe("Localizer", () => {
                 );
 
                 expect(c.value).toBe("Multi 2");
+            });
+
+            test("reactive prop defined later", () => {
+                locale.value = "nl-NL";
+                const base = reactive(Base);
+                const proxy = getResolver(base);
+
+                const c = computed(() => (proxy.multi as any).unknown);
+                const v = c.value;
+                expect("" + v).toBe("[*.unknown]");
+
+                (base.multi as any).unknown = l({ nl: "onbekend", en: "unknown" });
+
+                expect("" + c.value).toBe("onbekend");
             });
         });
     });

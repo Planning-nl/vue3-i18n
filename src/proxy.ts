@@ -6,7 +6,7 @@ import { LocaleItem, t } from "./Localizer";
 
 const proxies = new WeakMap<AnyObject, AnyObject>();
 
-export function createLocaleProxy<T extends AnyObject>(object: T): LocaleProxy<T> {
+export function getResolver<T extends AnyObject>(object: T): LocaleProxy<T> {
     const proxy = proxies.get(object);
     if (proxy) {
         return proxy as LocaleProxy<T>;
@@ -20,20 +20,26 @@ export function createLocaleProxy<T extends AnyObject>(object: T): LocaleProxy<T
 const localeHandlers: any = {
     get: function (target: AnyObject, key: string | symbol) {
         const res = Reflect.get(target, key);
-        if (res instanceof LocaleItem) {
-            return t(res);
-        } else if (typeof res === "object") {
-            return createLocaleProxy(res);
-        } else if (res === undefined && typeof key === "string") {
-            return createLocaleProxy(new UnknownPath(key, target) as any);
+        if (typeof key === "string") {
+            if (res === undefined) {
+                return getResolver(new UnknownPath(key, target) as any);
+            } else {
+                if (res instanceof LocaleItem) {
+                    return t(res);
+                } else if (typeof res === "object") {
+                    return getResolver(res);
+                } else {
+                    return res;
+                }
+            }
         } else {
             return res;
         }
     },
-    set: function (target: AnyObject, key: string | symbol, value: any) {
+    set: function () {
         throw new Error("Set is not allowed on locale proxies");
     },
-    deleteProperty: function (target: AnyObject, key: string | symbol) {
+    deleteProperty: function () {
         throw new Error("Delete is not allowed on locale proxies");
     },
 };
@@ -50,7 +56,7 @@ class UnknownPath {
     }
 
     toString(): string {
-        return "Unknown locale proxy path: " + this.getPath();
+        return `[*.${this.getPath()}]`;
     }
 }
 

@@ -62,6 +62,10 @@ export class LocaleItem<T extends LocalValue = LocalValue> {
     patch(other: LocaleItem<T>): void {
         Object.assign(this.locales, other.locales);
     }
+
+    get __v_skip(): boolean {
+        return true;
+    }
 }
 
 /**

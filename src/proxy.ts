@@ -21,16 +21,16 @@ const localeProxyHandlers: any = {
     get: function (target: AnyObject, key: string | symbol) {
         const res = Reflect.get(target, key);
         if (typeof key === "string") {
-            if (res === undefined) {
-                return getUnknownPathProxy(target, key);
-            } else {
+            if (typeof res === "object") {
                 if (res instanceof LocaleItem) {
                     return t(res);
-                } else if (typeof res === "object") {
-                    return getResolver(res);
                 } else {
-                    return res;
+                    return getResolver(res);
                 }
+            } else if (res === undefined) {
+                return getUnknownPathProxy(target, key);
+            } else {
+                return res;
             }
         } else {
             return res;

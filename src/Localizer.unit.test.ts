@@ -176,6 +176,11 @@ describe("Localizer", () => {
             const proxy = getResolver(Base);
         });
 
+        test("getResolver produces the same proxy", () => {
+            const proxy = getResolver(Base);
+            expect(proxy).toBe(getResolver(Base));
+        });
+
         test("get locale", () => {
             const proxy = getResolver(Base);
             withLocale("de-DE-NW", () => {

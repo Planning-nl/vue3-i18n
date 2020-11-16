@@ -1,5 +1,5 @@
 import { getLocale } from "./locale";
-import { ref } from "@vue/reactivity";
+import { ref, shallowReactive } from "@vue/reactivity";
 
 /**
  * Returns the item's translation for the current locale.
@@ -57,7 +57,11 @@ export type LocalValue = any | LocalFunction;
 export type LocalFunction = (...args: any[]) => any;
 
 export class LocaleItem<T extends LocalValue = LocalValue> {
-    constructor(public readonly locales: Record<string, T>) {}
+    public readonly locales: Record<string, T>;
+
+    constructor(locales: Record<string, T>) {
+        this.locales = shallowReactive(locales);
+    }
 
     patch(other: LocaleItem<T>): void {
         Object.assign(this.locales, other.locales);

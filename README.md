@@ -2,23 +2,20 @@
  
 This is a lightweight and type safe i18n library for [Vue 3](https://github.com/vuejs/vue-next) applications.
 
-* provides a way to define translations objects
-* provides getting and setting the locale
-* provides a translation function based on the active locale 
+This module:
+* provides a way to define **translation objects**
+* provides getting and setting the **active locales**
+* provides a **translation function** that returns the correct translation based on the active locale 
 * provides an ergonomic way to use these translations in templates
 
-It does so in just **200 lines** of code.
-
-At first glance it seems that some basic features are missing, such as pluralizations, 
-numbers and dates. But it's not necessary to ship these functions, as this module on its own provides enough flexibility 
-to solve these use cases. Examples are provided in this readme.
+It does so in just *200 lines* of code.
 
 ## Why Vue3-i18n?
 
 * Simple, easy to understand
-* Flexible enough to handle most use cases
-* Ergonomic template syntax
-* Reactive to updated locale and translations
+* Flexible enough to handle even complex i18n use cases
+* Ergonomic syntax
+* Locales and translations are reactive (@vue/reactivity)
 * Fast (translates 3M items per second)
 * Type safety (when using typescript)
 * Supports IDE features such as 'find usages' and 'rename'
@@ -83,6 +80,7 @@ console.log(`${t.hello} ${t.group.world}`); // "hallo wereld"
 locales.value = ["fr"];
 console.log(`${t.hello} ${t.group.world}`); // "👋 🌐"
 ```
+
 ## Features
 
 ### Translations object
@@ -122,7 +120,7 @@ tried (and so on).
 
 The `getLocales()` function returns the array of currently active locales.
 
-### Translating
+### Translate function
 Translating can be performed by the `t` function, which accepts a `LocaleItem` object and an optional specific locale.
 Example:
 
@@ -146,9 +144,8 @@ the value. The following rules apply:
 
 ### Overriding the locale
 
-The function `withLocales` can be used to fetch a translation for a specific
-locale. It accepts a list of locales, and a callback that produces a value. 
-Example:
+The function `withLocales` can be used to fetch a translation for a specific locale. It accepts a list of locales, and 
+a callback that produces a value. Example:
 
 ```typescript
 const hallo = withLocales(["nl"], () => t.hello);
@@ -239,13 +236,13 @@ will receive a typescript error which forces them to provide translations for th
 
 This module doesn't (need to) ship with extra goodies such as string format patterns, pluralization, number and dates.
 
-It's easy to implement it by yourself. The following examples might give you some ideas. 
+We don't need to because it's easy to implement it by yourself. The following examples might give you some ideas. 
 
 ### String format patterns
 
-Most i18n frameworks allow special patterns in translation strings as placeholders or references to other translations.
+Most i18n frameworks allow special patterns in translation strings as *placeholders* or *references* to other translations.
  
-This library doesn't post-process strings at all, so it doesn't have any such patterns. Just use functions, as they 
+This library doesn't post-process strings at all, and it doesn't have any such patterns. Just use functions, as they 
 provide flexibility as well as type safety. Example:
 
 ```typescript
@@ -270,12 +267,19 @@ console.log(t.greetings("Evan")); // "Hello dear Evan";
 
 ### Pluralization
 
-What kind of pluralization you need may depend on your application and used languages.
+What method of pluralization you need may depend on your application and used languages.
 
-As an example, you could define a factory that produces a count-to-string function. 
+But as an example, you could define a factory that produces a count-to-string function:
 
 ```typescript
 import { l, resolve, locale } from "@planning.nl/vue3-i18n";
+
+const translations = {
+    bananas: l({
+        en: plural("no bananas", "one banana", "{n} bananas"),
+        nl: plural("geen bananen", "één banaan", "{n} bananen"),
+    }),
+};
 
 export function plural(none: string, one: string, multiple: string): (count: number) => string {
     return (count: number): string => {
@@ -289,13 +293,6 @@ export function plural(none: string, one: string, multiple: string): (count: num
     };
 }
 
-const translations = {
-    bananas: l({
-        en: plural("no bananas", "one banana", "{n} bananas"),
-        nl: plural("geen bananen", "één banaan", "{n} bananen"),
-    }),
-};
-
 const t = resolve(translations);
 
 console.log(t.bananas(10)); // 10 bananas
@@ -305,8 +302,10 @@ Some languages, such as Russian, have complex pluralization rules. This could be
 `pluralRussian` factory that accepts different options but produces a function with the same signature. 
 
 ### Number formatting
-Modern browsers can already format numbers based on a locale, so no need to include it in this library. You may want to
-add your own helper function though. We simply must 'feed' it with our current locales:
+
+Modern browsers can already format numbers based on a locale, so no need to include it in this library. 
+
+You may want to add your own helper function though. We simply must 'feed' it with our current locales:
 
 ```typescript
 import { getLocales } from "@planning.nl/vue3-i18n";
@@ -320,7 +319,7 @@ export function number(v: number, options: NumberFormatOptions = {}): string {
 ### Date formatting
 Browser support locale date formatting using `DateTimeFormat`. So same as above.
 
-If you need [https://kazupon.github.io/vue-i18n/guide/datetime.html](custom definition formats), this is a possible 
+If you need [https://kazupon.github.io/vue-i18n/guide/datetime.html](custom definition formats), this could be a good
 approach:
 
 ```typescript
@@ -352,16 +351,16 @@ export function formatDate(date: Date, mode: keyof typeof dateTimeFormats): stri
 console.log(formatDate(new Date(), "short"));
 ```
 
-Notice that it gracefully falls back to the browser-detected locale formats.
-
 ### Lazy loading
 
-You could fetch the data in json format and then run a `patch<any>`. The reactivity would automatically update your 
-application once the data is loaded.
+If you really need this (although I wonder if anyone really does..), you could fetch the data in json format and then 
+run a `patch<any>`. The reactivity would automatically update your application once the data is loaded.
 
 ## Browser support
 
 Browser support for this module matches Vue3 browser support.
+
+Most importantly it relies on `Proxy`, so that means all modern browsers are supported but IE11 is not.
 
 ## License
 [Apache](https://opensource.org/licenses/Apache-2.0)

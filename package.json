@@ -59,9 +59,9 @@
     "license": "apache",
     "main": "cjs/index.js",
     "module": "esm/index.js",
-    "jsdelivr": "dist/planning-i18n.js",
-    "unpkg": "dist/planning-i18n.js",
-    "repository": "github:Planning-nl/i18n",
+    "jsdelivr": "dist/vue3-i18n.js",
+    "unpkg": "dist/vue3-i18n.js",
+    "repository": "github:Planning-nl/vue3-i18n",
     "types": "types/index.d.ts",
     "engines": {
         "node": ">=8.0.0"

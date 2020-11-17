@@ -1,20 +1,17 @@
 # Vue3-i18n
  
-This module offers lightweight and type safe i18n for [Vue 3](https://github.com/vuejs/vue-next) applications.
+This is a lightweight and type safe i18n library for [Vue 3](https://github.com/vuejs/vue-next) applications.
 
-This module is meant to be a replacement for all those heavyweight i18n modules. 
-
-Instead, this module:
-* allows defining and changing a translations object
-* selects the correct translation based on the active locale
-* offers a resolver proxy to use translations in templates ergonomically
+* provides a way to define translations objects
+* provides getting and setting the locale
+* provides a translation function based on the active locale 
+* provides an ergonomic way to use these translations in templates
 
 It does so in just **200 lines** of code.
 
 At first glance it seems that some basic features are missing, such as pluralizations, 
-numbers and dates. But this module utilizes the flexibility of ES6 code to allow these
-features to be implemented in minimal code, so it's not necessary to ship these utility
-functions. Examples are provided in this readme.
+numbers and dates. But it's not necessary to ship these functions, as this module on its own provides enough flexibility 
+to solve these use cases. Examples are provided in this readme.
 
 ## Why Vue3-i18n?
 
@@ -90,11 +87,9 @@ console.log(`${t.hello} ${t.group.world}`); // "👋 🌐"
 
 ### Translations object
 
-You define a recursive object. Keys can either be objects, primitives or `LocaleItem`
-instances. A `LocaleItem` defines a value (of any type) for various supported locales. 
-
-These `LocaleItem` instances can be created using the `l` shortcut function. It accepts
-a plain object with translated values, keyed by locale. Example:
+You can define translations in a recursive object. Keys can either be objects (for grouping) or translatable items,
+which can be created using the `l` shortcut function. It accepts a plain object with translated values, keyed by locale. 
+Example:
 
 ```typescript
 import { l } from "@planning.nl/vue3-i18n";
@@ -112,14 +107,20 @@ const translations = {
 }
 ```
 
-A locale key is a string that consists out of groups, separated by dash symbols.
+A locale key is a string. It can contain a multiple parts, separated by `-` symbols. The first group represents the 
+language, the second group the region. After that, groups represent more and more specific sub regions/variants of the
+language.
+
 The special key `fallback` provides the fallback value when no other locale matches. 
 
 ### Locales
-Locales can be set using the exported `locales` ref. It accepts an array of 
-strings or the default value `undefined` (in which case it uses `navigator.languages` instead).
+Locales can be set using the exported `locales` ref. It accepts an array of strings or the default value `undefined` 
+(in which case it uses `navigator.languages` instead).
 
-The `getLocales()` function returns the array of currently used locales.
+The first locale is the primary one. Only if no translation can be found for it, the next locale in the list will be
+tried (and so on).
+
+The `getLocales()` function returns the array of currently active locales.
 
 ### Translating
 Translating can be performed by the `t` function, which accepts a `LocaleItem` object and an optional specific locale.
@@ -131,9 +132,9 @@ locales.value = ["nl"];
 console.log(t(translations.hello)); // "hallo"
 ```
 
-Usually it's more convenient to use a resolver proxy, as you do not need to manually invoke the t function.
+> Usually it's more convenient to use a resolver. Then you don't need to manually invoke the `t` function.
 
-### Translation rules
+#### Translation rules
 
 When fetching a translation, one of the keys will be selected for which to return
 the value. The following rules apply:
@@ -149,10 +150,15 @@ The function `withLocales` can be used to fetch a translation for a specific
 locale. It accepts a list of locales, and a callback that produces a value. 
 Example:
 
-### Resolver
-The `resolve()` function produces a proxy-based structure that can be used to get translation values.
+```typescript
+const hallo = withLocales(["nl"], () => t.hello);
+```
 
-In practice it's a bit more ergonomic than having to call the `t` function manually. Especially within templates.
+### Resolver
+The `resolve()` function produces a structure that can be used to get translation values. It uses Proxy objects to 
+dynamically resolve properties.
+
+In practice it's a very ergonomic way of using translations, especially within templates.
 
 Example:
 ```typescript
@@ -164,32 +170,24 @@ console.log(t.hello); // "hallo"
 
 ```
 
-The resolver has the same structure as the translations object, though `LocalItem` instances are replaced by their 
-translated value. 
-
-If a non-existing path is traversed (which is possible in non-typescript contexts like
-templates) an `UnknownPath` object is returned which has a `toString` which describes the key. Although this is a 
-situation you should resolve, it's at least better than bailing out with a `Uncaught TypeError: Cannot read property 'X' 
-of undefined`. 
-
-```typescript
-const hallo = withLocales(["nl"], () => t.hello);
-```
+The resolver has the same type as the wrapped translations object, though the translatable items themselves are replaced
+by the type of the translation values.
 
 ### Patching
 
-The `patch` function allows you to add/modify translations to an existing translation object.
+The `patch` function allows you to add or modify locales to an existing translation object.
 
-> You should apply `patch` on the original translations object, not on a resolver (obtained by the `resolve` function).  
-
-It iterates over all objects recursively, and merges the locales specified in LocaleItems.
+It iterates over both the translations object recursively, and merges the locales for the translatable items.
 
 Using the patch function ensures that all translation items have been specified. If some keys have not been specified a 
-compilation error will occur.
+typescript error will occur. This makes sure you didn't forget one. 
+
+> This is especially handy when you patch the translations of a 3rd party component which may be updated with new 
+> translations. See 'i18n for generic components'.
 
 There are two ways to ignore unspecified properties: 
 1. By specifying the property value `undefined`, it will ignore it completely.
-2. By overriding the type with any: `patch<any>(Base, obj)` 
+2. By overriding the type with any: `patch<any>(Base, obj)`.
 
 Example:
 ```typescript
@@ -220,42 +218,35 @@ locales.value = ["de-DE-NW"];
 console.log(t.main); // Nordrhein Westfalen
 ```
 
+> You should apply `patch` on the original translations object, not on a resolver (obtained by the `resolve` function).  
+
 ## i18n for generic components
 
 This lightweight module is perfect for providing i18n in generic components.
 
-Just define your translations in a seperate file and export it (global). Then import
-the translations into your component(s) and use them. Add translations for the locales
-you wish to include by default.
+Just define your translations in a seperate file and export it. Then import the translations into your component(s) and 
+use them where you need them. Add translations for the locales that you wish to include by default.
 
-That's all.
+That's all you need to do.
 
-This enables applications using your component to `patch` the translation set with 
-additional locales, or even to override the defaults that you have set.
+This enables applications using your component to `patch` the translation set with additional locales, or even to 
+override the defaults that you have set.
 
-Better still, `patch` enforces that all messages are translated. So if you add a new
-message in an update, your users will receive a typescript error which notifies them
-to provide translations for their own locales.
+Better still, `patch` enforces that all messages are translated. So if you add a new message in an update, your users 
+will receive a typescript error which forces them to provide translations for their own locales.
 
-## Other features
+## Howto
 
-This module doesn't ship with additional features.
+This module doesn't (need to) ship with extra goodies such as string format patterns, pluralization, number and dates.
 
-Fortunately, you can still achieve these useful features (and more):
-* String format patterns
-* Pluralization
-* Number formatting
-* Date formatting
-* Lazy loading
-
-It's just up to you to implement them, though this is usually easy due to the 
-flexibility of this module. Here are some suggestions.
+It's easy to implement it by yourself. The following examples might give you some ideas. 
 
 ### String format patterns
 
-We don't support them as we don't need them. We recommend using functions, as it provides type safety. With
-template literals the syntax is ergonomic enough. We can use it to back-reference other
-translations (even functions), or use placeholders.
+Most i18n frameworks allow special patterns in translation strings as placeholders or references to other translations.
+ 
+This library doesn't post-process strings at all, so it doesn't have any such patterns. Just use functions, as they 
+provide flexibility as well as type safety. Example:
 
 ```typescript
 import { l, resolve } from "@planning.nl/vue3-i18n";
@@ -279,8 +270,9 @@ console.log(t.greetings("Evan")); // "Hello dear Evan";
 
 ### Pluralization
 
-We define a helper function that produces a count-to-string function. Notice how we could create a different
-helper function if we'd need more complex pluralization rules, such as in Russian.
+What kind of pluralization you need may depend on your application and used languages.
+
+As an example, you could define a factory that produces a count-to-string function. 
 
 ```typescript
 import { l, resolve, locale } from "@planning.nl/vue3-i18n";
@@ -309,59 +301,63 @@ const t = resolve(translations);
 console.log(t.bananas(10)); // 10 bananas
 ```
 
+Some languages, such as Russian, have complex pluralization rules. This could be easily solved by creating a specific
+`pluralRussian` factory that accepts different options but produces a function with the same signature. 
+
 ### Number formatting
-Modern browsers can format numbers based on a locale. We simply must 'feed' it with our current locale:
+Modern browsers can already format numbers based on a locale, so no need to include it in this library. You may want to
+add your own helper function though. We simply must 'feed' it with our current locales:
 
 ```typescript
-import { getLocale } from "@planning.nl/vue3-i18n";
+import { getLocales } from "@planning.nl/vue3-i18n";
 
 export function number(v: number, options: NumberFormatOptions = {}): string {
-    const formatter = Intl.NumberFormat(getLocale(), options);
+    const formatter = Intl.NumberFormat(getLocales(), options);
     return formatter.format(v);
 }
 ```
 
 ### Date formatting
-Browser support locale date formatting using `DateTimeFormat`.
+Browser support locale date formatting using `DateTimeFormat`. So same as above.
 
-We could localize (https://kazupon.github.io/vue-i18n/guide/datetime.html)[custom definition formats] like this:
+If you need [https://kazupon.github.io/vue-i18n/guide/datetime.html](custom definition formats), this is a possible 
+approach:
 
 ```typescript
-import { l, resolve, locale } from "@planning.nl/vue3-i18n";
-
-export function dtf(options: DateTimeFormatOptions): (date: Date) => string {
-    return (date: Date = new Date()): string => (new Intl.DateTimeFormat('en-GB', options)).format(date)
-}
+import { l, resolve, getLocales } from "@planning.nl/vue3-i18n";
 
 const dateTimeFormats = {
     short: l({
-        "en-US": dtf({year: "numeric", month: "short", day: "numeric"}),
-        fallback: dtf({datestyle: "short"})
+        "en-US": {year: "numeric", month: "short", day: "numeric"},
+        fallback: {datestyle: "short"}
     }),
     long: l({
-        "en-US": dtf({
+        "en-US": {
             year: "numeric", month: "short", day: "numeric",
             weekday: "short", hour: "numeric", minute: "numeric"
-        }),
-        "ja-JP": dtf({
+        },
+        "ja-JP": {
             year: "numeric", month: "short", day: "numeric",
             weekday: "short", hour: "numeric", minute: "numeric", hour12: true
-        }),
-        fallback: dtf({datestyle: "long"})
-    }),
+        },
+        fallback: {datestyle: "long"}
+    })
 }
-export const localDate = resolve(translations);
 
-console.log(localDate.short());
+export function formatDate(date: Date, mode: keyof typeof dateTimeFormats): string {
+    const options = t(dateTimeFormats[mode]);
+    return (new Intl.DateTimeFormat(getLocales(), options)).format(date);
+};
+
+console.log(formatDate(new Date(), "short"));
 ```
-Notice how it gracefully falls back to the browser-detected locale formats.
+
+Notice that it gracefully falls back to the browser-detected locale formats.
 
 ### Lazy loading
 
-Frankly, I don't care much about lazy loading. We're dealing with text here which is easy to compress.
-
-But if you really need this it's still possible. Simply load the data in a json and then run a `patch<any>`. 
-The reactivity provided in this module would automatically update your site once the data is loaded.
+You could fetch the data in json format and then run a `patch<any>`. The reactivity would automatically update your 
+application once the data is loaded.
 
 ## Browser support
 

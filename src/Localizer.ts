@@ -1,25 +1,22 @@
-import { getLocale } from "./locale";
-import { ref, shallowReactive } from "@vue/reactivity";
+import { getLocales } from "./locales";
+import { shallowReactive } from "@vue/reactivity";
 
 /**
  * Returns the item's translation for the current locale.
  */
-export function t<T extends LocalValue>(item: LocaleItem<T>, locale = getLocale()): T {
-    let result = getTranslation(item, locale);
-
-    if (result === undefined) {
-        const fallback = fallbackLocale.value;
-        if (fallback) {
-            result = getTranslation(item, fallback);
-        }
-
-        if (result === undefined) {
-            // Use first item.
-            result = getFirstLocaleValue(item)!;
+export function t<T extends LocalValue>(item: LocaleItem<T>, locales = getLocales()): T {
+    for (let i = 0; i < locales.length; i++) {
+        const result = getTranslation(item, locales[i]);
+        if (result) {
+            return result;
         }
     }
 
-    return result;
+    if (item.locales.fallback) {
+        return item.locales.fallback;
+    } else {
+        return getFirstLocaleValue(item)!;
+    }
 }
 
 function getTranslation<T extends LocalValue>(item: LocaleItem<T>, locale: string): T | undefined {
@@ -36,17 +33,9 @@ function getTranslation<T extends LocalValue>(item: LocaleItem<T>, locale: strin
             const partialMatch = item.locales[partialLocale];
             if (partialMatch !== undefined) return partialMatch;
         }
-
-        const fallback = item.locales.fallback;
-        if (fallback !== undefined) {
-            return fallback;
-        } else {
-            return undefined!;
-        }
+        return undefined!;
     }
 }
-
-export const fallbackLocale = ref("en");
 
 function getFirstLocaleValue<T>(item: LocaleItem<T>): T | undefined {
     const firstKey = Object.keys(item)[0];
@@ -67,6 +56,7 @@ export class LocaleItem<T extends LocalValue = LocalValue> {
         Object.assign(this.locales, other.locales);
     }
 
+    // Skip reactivity for item, because we don't want the values to become reactive.
     get __v_skip(): boolean {
         return true;
     }

@@ -1,5 +1,5 @@
 import { patch } from "./patch";
-import { getLocale, locale, withLocale } from "./locale";
+import { getLocales, locales, withLocales } from "./locales";
 import { l, LocaleItem, t } from "./Localizer";
 import { getResolver } from "./proxy";
 import { computed, reactive } from "@vue/reactivity";
@@ -8,71 +8,76 @@ describe("Localizer", () => {
     const L = l({ nl: "nl", "nl-NL": "nl-NL", "de-DE": "de-DE", "de-DE-BY": "de-DE-BY", fallback: "fallback" });
 
     afterEach(() => {
-        locale.value = undefined;
+        locales.value = undefined;
     });
 
     describe("locale", () => {
         test("fallback to navigator locale", () => {
-            expect(getLocale()).toBe(navigator.language);
+            expect(getLocales()).toEqual(navigator.languages);
         });
         test("set/get locale", () => {
-            locale.value = "nl-NL";
-            expect(getLocale()).toBe("nl-NL");
-            locale.value = "en-US";
-            expect(getLocale()).toBe("en-US");
+            locales.value = ["nl-NL"];
+            expect(getLocales()).toEqual(["nl-NL"]);
+            locales.value = ["en-US"];
+            expect(getLocales()).toEqual(["en-US"]);
         });
         test("withLocale", () => {
-            expect(withLocale("de-DE", getLocale)).toBe("de-DE");
+            expect(withLocales(["de-DE"], getLocales)).toEqual(["de-DE"]);
         });
     });
 
     describe("locale matching", () => {
         describe("locale matching", () => {
             test("empty locale", () => {
-                locale.value = "";
+                locales.value = [];
                 expect(t(L)).toBe("fallback");
             });
 
             test("unknown full locale", () => {
-                locale.value = "gr-GR-Cyrl";
+                locales.value = ["gr-GR-Cyrl"];
                 expect(t(L)).toBe("fallback");
+            });
+
+            test("fallback locale", () => {
+                locales.value = ["gr-GR-Cyrl", "nl"];
+                expect(t(L)).toBe("nl");
             });
 
             describe("language", () => {
                 test("language", () => {
-                    locale.value = "nl";
+                    locales.value = ["nl"];
                     expect(t(L)).toBe("nl");
                 });
 
                 test("[language]", () => {
-                    locale.value = "gr";
+                    locales.value = ["gr"];
                     expect(t(L)).toBe("fallback");
                 });
             });
 
             describe("region", () => {
                 test("language-region", () => {
-                    locale.value = "nl-NL";
+                    locales.value = ["nl-NL"];
                     expect(t(L)).toBe("nl-NL");
                 });
 
                 test("language-[region]", () => {
-                    locale.value = "nl-BE";
+                    locales.value = ["nl-BE"];
                     expect(t(L)).toBe("nl");
                 });
 
                 test("language-region", () => {
-                    locale.value = "de-DE";
+                    locales.value = ["de-DE"];
                     expect(t(L)).toBe("de-DE");
                 });
 
                 test("language-region-subregion", () => {
-                    locale.value = "de-DE-BY";
+                    locales.value = ["de-DE-BY"];
                     expect(t(L)).toBe("de-DE-BY");
                 });
 
                 test("language-region-[subregion]", () => {
-                    locale.value = "de-DE-NW";
+                    locales.value = ["de-DE-NW"];
                     expect(t(L)).toBe("de-DE");
                 });
             });
@@ -97,19 +102,19 @@ describe("Localizer", () => {
 
         describe("local", () => {
             test("main locale", () => {
-                locale.value = "en";
+                locales.value = ["en"];
                 expect(t(L.main.value)).toBe(L.main.value.locales["en"]);
             });
             test("sub locale, not existing", () => {
-                locale.value = "en-US";
+                locales.value = ["en-US"];
                 expect(t(L.main.value)).toBe(L.main.value.locales["en"]);
             });
             test("sub locale, existing", () => {
-                locale.value = "en-GB";
+                locales.value = ["en-GB"];
                 expect(t(L.main.value)).toBe(L.main.value.locales["en-GB"]);
             });
             test("fallback to generic locale", () => {
-                locale.value = "it";
+                locales.value = ["it"];
 
                 // Use first specified value.
                 expect(t(L.main.sub.a)).toBe(L.main.sub.a.locales.fallback);
@@ -132,12 +137,12 @@ describe("Localizer", () => {
             },
         };
 
-        expect(withLocale("nl", () => t(Base.multi.main))).toBe("Nederlands");
-        expect(withLocale("de-DE-BY", () => t(Base.multi.main))).toBe("Bayern");
-        expect(withLocale("de-DE-NW", () => t(Base.multi.main))).toBe("Deutsch");
-        expect(withLocale("fr-BE", () => t(Base.multi.main))).toBe("-");
+        expect(withLocales(["nl"], () => t(Base.multi.main))).toBe("Nederlands");
+        expect(withLocales(["de-DE-BY"], () => t(Base.multi.main))).toBe("Bayern");
+        expect(withLocales(["de-DE-NW"], () => t(Base.multi.main))).toBe("Deutsch");
+        expect(withLocales(["fr-BE"], () => t(Base.multi.main))).toBe("-");
 
-        expect(withLocale("nl", () => t(Base.multi.sub))).toBe("Nederlands");
+        expect(withLocales(["nl"], () => t(Base.multi.sub))).toBe("Nederlands");
 
         patch(Base, {
             multi: {
@@ -149,10 +154,10 @@ describe("Localizer", () => {
             },
         });
 
-        expect(withLocale("nl", () => t(Base.multi.main))).toBe("Nederlands 2");
-        expect(withLocale("de-DE", () => t(Base.multi.main))).toBe("Deutsch");
-        expect(withLocale("de-DE-NW", () => t(Base.multi.main))).toBe("Nordrhein Westfalen");
-        expect(withLocale("nl", () => t(Base.multi.sub))).toBe("Nederlands");
+        expect(withLocales(["nl"], () => t(Base.multi.main))).toBe("Nederlands 2");
+        expect(withLocales(["de-DE"], () => t(Base.multi.main))).toBe("Deutsch");
+        expect(withLocales(["de-DE-NW"], () => t(Base.multi.main))).toBe("Nordrhein Westfalen");
+        expect(withLocales(["nl"], () => t(Base.multi.sub))).toBe("Nederlands");
     });
 
     describe("locale proxy", () => {
@@ -178,14 +183,14 @@ describe("Localizer", () => {
 
         test("get locale", () => {
             const proxy = getResolver(Base);
-            withLocale("de-DE-NW", () => {
+            withLocales(["de-DE-NW"], () => {
                 expect(proxy.main).toBe("Deutsch");
             });
         });
 
         test("get deep locale", () => {
             const proxy = getResolver(Base);
-            withLocale("nl-NL", () => {
+            withLocales(["nl-NL"], () => {
                 expect(proxy.multi.level).toBe("Multi");
             });
         });
@@ -219,14 +224,14 @@ describe("Localizer", () => {
 
         describe("reactivity", () => {
             test("wrap reactive proxy in locale proxy", () => {
-                locale.value = "nl-NL";
+                locales.value = ["nl-NL"];
                 const base = reactive(Base);
                 const proxy = getResolver(base);
                 expect(proxy.multi.level).toBe("Multi");
             });
 
             test("locale proxy should react to reactivity", () => {
-                locale.value = "nl-NL";
+                locales.value = ["nl-NL"];
                 const base = reactive(Base);
                 const proxy = getResolver(base);
 
@@ -241,7 +246,7 @@ describe("Localizer", () => {
             });
 
             test("reactive prop defined later", () => {
-                locale.value = "nl-NL";
+                locales.value = ["nl-NL"];
                 const base = reactive(Base);
                 const proxy = getResolver(base);
 
@@ -254,5 +259,23 @@ describe("Localizer", () => {
                 expect("" + c.value).toBe("onbekend");
             });
         });
+    });
+
+    test("patterns", () => {
+        const translations = {
+            dear: l({ en: "dear", nl: "beste" }),
+            greetings: l({
+                en: (name: string) => `Hello ${t.dear} ${name}`,
+                nl: (name: string) => `Hallo ${t.dear} ${name}`,
+            }),
+        };
+
+        const t = getResolver(translations);
+
+        locales.value = ["nl-NL"];
+        expect(t.greetings("Evan")).toBe("Hallo beste Evan");
+
+        locales.value = ["en"];
+        expect(t.greetings("Evan")).toBe("Hello dear Evan");
     });
 });

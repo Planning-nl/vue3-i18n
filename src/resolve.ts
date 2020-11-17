@@ -4,16 +4,15 @@
  */
 import { LocaleItem, t } from "./Localizer";
 
-/**
- * Keys can be ignored by setting the undefined value.
- */
-export type LocaleProxy<T extends AnyObject> = {
-    [P in keyof T]: T[P] extends LocaleItem<infer U> ? U : T[P] extends AnyObject ? LocaleProxy<T[P]> : T[P];
-};
+export type LocaleProxy<T extends AnyObject> = Readonly<
+    {
+        [P in keyof T]: T[P] extends LocaleItem<infer U> ? U : T[P] extends AnyObject ? LocaleProxy<T[P]> : T[P];
+    }
+>;
 
 type AnyObject = Record<any, unknown>;
 
-export function getResolver<T extends AnyObject>(object: T): LocaleProxy<T> {
+export function resolve<T extends AnyObject>(object: T): LocaleProxy<T> {
     return new Proxy(object, localeProxyHandlers) as LocaleProxy<T>;
 }
 
@@ -25,7 +24,7 @@ const localeProxyHandlers: any = {
                 if (res instanceof LocaleItem) {
                     return t(res);
                 } else {
-                    return getResolver(res);
+                    return resolve(res);
                 }
             } else if (res === undefined) {
                 return getUnknownPathProxy(target, key);

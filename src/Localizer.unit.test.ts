@@ -1,7 +1,7 @@
 import { patch } from "./patch";
 import { getLocales, locales, withLocales } from "./locales";
 import { l, LocaleItem, t } from "./Localizer";
-import { getResolver } from "./proxy";
+import { resolve } from "./resolve";
 import { computed, reactive } from "@vue/reactivity";
 
 describe("Localizer", () => {
@@ -178,45 +178,45 @@ describe("Localizer", () => {
         };
 
         test("create", () => {
-            const proxy = getResolver(Base);
+            const resolver = resolve(Base);
         });
 
         test("get locale", () => {
-            const proxy = getResolver(Base);
+            const proxy = resolve(Base);
             withLocales(["de-DE-NW"], () => {
                 expect(proxy.main).toBe("Deutsch");
             });
         });
 
         test("get deep locale", () => {
-            const proxy = getResolver(Base);
+            const proxy = resolve(Base);
             withLocales(["nl-NL"], () => {
                 expect(proxy.multi.level).toBe("Multi");
             });
         });
 
         test("get primitive value", () => {
-            const proxy = getResolver(Base);
+            const proxy = resolve(Base);
             expect(proxy.primitive).toBe(2);
         });
 
         test("get object value", () => {
-            const proxy = getResolver(Base);
+            const proxy = resolve(Base);
             expect(Object.keys(proxy.multi)).toEqual(["level"]);
         });
 
         test("set value produces error", () => {
-            const proxy = getResolver(Base);
-            expect(() => (proxy.main = "newValue")).toThrowError("Set is not allowed");
+            const proxy = resolve(Base);
+            expect(() => ((proxy as any).main = "newValue")).toThrowError("Set is not allowed");
         });
 
         test("delete value produces error", () => {
-            const proxy = getResolver(Base);
+            const proxy = resolve(Base);
             expect(() => delete (proxy as any).main).toThrowError("Delete is not allowed");
         });
 
         test("unknown path", () => {
-            const proxy = getResolver(Base);
+            const proxy = resolve(Base);
             const v = (proxy as any).bad.path;
             const s = "" + v;
             expect(s).toBe("[*.bad.path]");
@@ -226,14 +226,14 @@ describe("Localizer", () => {
             test("wrap reactive proxy in locale proxy", () => {
                 locales.value = ["nl-NL"];
                 const base = reactive(Base);
-                const proxy = getResolver(base);
+                const proxy = resolve(base);
                 expect(proxy.multi.level).toBe("Multi");
             });
 
             test("locale proxy should react to reactivity", () => {
                 locales.value = ["nl-NL"];
                 const base = reactive(Base);
-                const proxy = getResolver(base);
+                const proxy = resolve(base);
 
                 const c = computed(() => proxy.multi.level);
                 expect(c.value).toBe("Multi");
@@ -248,7 +248,7 @@ describe("Localizer", () => {
             test("reactive prop defined later", () => {
                 locales.value = ["nl-NL"];
                 const base = reactive(Base);
-                const proxy = getResolver(base);
+                const proxy = resolve(base);
 
                 const c = computed(() => (proxy.multi as any).unknown);
                 const v = c.value;
@@ -270,7 +270,7 @@ describe("Localizer", () => {
             }),
         };
 
-        const t = getResolver(translations);
+        const t = resolve(translations);
 
         locales.value = ["nl-NL"];
         expect(t.greetings("Evan")).toBe("Hallo beste Evan");

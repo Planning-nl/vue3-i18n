@@ -16,9 +16,10 @@ It does so in just *200 lines* of code.
 * Flexible enough to handle even complex i18n use cases
 * Ergonomic syntax
 * Locales and translations are reactive (@vue/reactivity)
+* Tiny in size
 * Fast (translates 3M items per second)
 * Type safety (when using typescript)
-* Supports IDE features such as 'find usages' and 'rename'
+* Good support for IDE features such as *find usages* and *rename*
 
 ## Installation
 

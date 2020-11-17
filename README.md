@@ -1,7 +1,5 @@
-# Planning.nl i18n 
-[![Build Status](https://img.shields.io/travis/Planning-nl/i18n/master.svg)](https://travis-ci.org/Planning-nl/vue3-i18n) 
-[![NPM Version](https://img.shields.io/npm/v/planning-i18n)](https://www.npmjs.com/package/planning-vue3-i18n)
-
+# Vue3-i18n
+ 
 This module offers lightweight and type safe i18n for [Vue 3](https://github.com/vuejs/vue-next) applications.
 
 This module is meant to be a replacement for all those heavyweight i18n modules. 
@@ -135,7 +133,7 @@ console.log(t(translations.hello)); // "hallo"
 
 Usually it's more convenient to use a resolver proxy, as you do not need to manually invoke the t function.
 
-### Translation process
+### Translation rules
 
 When fetching a translation, one of the keys will be selected for which to return
 the value. The following rules apply:
@@ -144,6 +142,12 @@ the value. The following rules apply:
 2. If no such key can be found at all, the next locale is checked. 
 3. If no locale can be matched, the `fallback` key is used.
 4. If `fallback` is not specified, the first specified key is used.
+
+### Overriding the locale
+
+The function `withLocales` can be used to fetch a translation for a specific
+locale. It accepts a list of locales, and a callback that produces a value. 
+Example:
 
 ### Resolver
 The `resolve()` function produces a proxy-based structure that can be used to get translation values.
@@ -167,12 +171,6 @@ If a non-existing path is traversed (which is possible in non-typescript context
 templates) an `UnknownPath` object is returned which has a `toString` which describes the key. Although this is a 
 situation you should resolve, it's at least better than bailing out with a `Uncaught TypeError: Cannot read property 'X' 
 of undefined`. 
-
-### Overriding the locale
-
-The function `withLocales` can be used to fetch a translation for a specific
-locale. It accepts a list of locales, and a callback that produces a value. 
-Example:
 
 ```typescript
 const hallo = withLocales(["nl"], () => t.hello);

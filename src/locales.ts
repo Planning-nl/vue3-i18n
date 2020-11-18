@@ -1,10 +1,10 @@
 import { ref } from "@vue/reactivity";
 
 export const locales = ref<string[] | undefined>();
-let forceLocale: string[] | undefined;
+let forceLocales: string[] | undefined;
 
 export function getLocales(): Readonly<string[]> {
-    if (forceLocale) return forceLocale;
+    if (forceLocales) return forceLocales;
     return locales.value ?? navigator.languages;
 }
 
@@ -12,13 +12,13 @@ export function getLocales(): Readonly<string[]> {
  * Can be used to override the current locale temporarily.
  * Example usage: `const c = withLocale(["en-GB"], () => local(LocalizationSettings.currency))` ('GBP')
  */
-export function withLocales<T>(locale: string[], callback: () => T): T {
-    forceLocale = locale;
+export function withLocales<T>(locales: string[], callback: () => T): T {
+    forceLocales = locales;
     let result: T;
     try {
         result = callback();
     } finally {
-        forceLocale = undefined;
+        forceLocales = undefined;
     }
     return result;
 }

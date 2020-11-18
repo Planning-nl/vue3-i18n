@@ -35,7 +35,7 @@ export default defineComponent({
     setup() {
         return {
             locale,
-            t: resolve({
+            t: useI18n({
                 hello: l({
                     en: "hello",
                     nl: "hallo",
@@ -56,7 +56,7 @@ export default defineComponent({
 You could also define a shared set that can be imported and used throughout your app:
 
 ```typescript
-import { l, resolve, locale } from "@planning.nl/vue3-i18n";
+import { l, resolve, locale } from "@planning.nl/vue3-i18n"; import { useI18n } from "./index";
 
 const translations = {
     hello: l({
@@ -73,7 +73,7 @@ const translations = {
     }
 };
 
-export const t = resolve(translations);
+export const t = useI18n(translations);
 
 locales.value = ["nl-NL"];
 console.log(`${t.hello} ${t.group.world}`); // "hallo wereld"
@@ -84,16 +84,16 @@ console.log(`${t.hello} ${t.group.world}`); // "👋 🌐"
 
 ## Features
 
-### Translations object
+### useI18n
 
 You can define translations in a recursive object. Keys can either be objects (for grouping) or translatable items,
 which can be created using the `l` shortcut function. It accepts a plain object with translated values, keyed by locale. 
 Example:
 
 ```typescript
-import { l } from "@planning.nl/vue3-i18n";
+import { l } from "@planning.nl/vue3-i18n"; import { useI18n } from "./index";
 
-const translations = {
+const translations = useI18n({
     hello: l({
         en: "hello",
         "en-US": "hi",
@@ -103,7 +103,7 @@ const translations = {
     main: {
         sub: l({ nl: "sub" })
     }
-}
+})
 ```
 
 A locale key is a string. It can contain a multiple parts, separated by `-` symbols. The first group represents the 
@@ -120,18 +120,6 @@ The first locale is the primary one. Only if no translation can be found for it,
 tried (and so on).
 
 The `getLocales()` function returns the array of currently active locales.
-
-### Translate function
-Translating can be performed by the `t` function, which accepts a `LocaleItem` object and an optional specific locale.
-Example:
-
-```typescript
-import { t } from "@planning.nl/vue3-i18n";
-locales.value = ["nl"];
-console.log(t(translations.hello)); // "hallo"
-```
-
-> Usually it's more convenient to use a resolver. Then you don't need to manually invoke the `t` function.
 
 #### Translation rules
 
@@ -152,28 +140,9 @@ a callback that produces a value. Example:
 const hallo = withLocales(["nl"], () => t.hello);
 ```
 
-### Resolver
-The `resolve()` function produces a structure that can be used to get translation values. It uses Proxy objects to 
-dynamically resolve properties.
-
-In practice it's a very ergonomic way of using translations, especially within templates.
-
-Example:
-```typescript
-
-console.log(t(translations.hello)); // "hallo"
-
-const t = resolve(translations);
-console.log(t.hello); // "hallo"
-
-```
-
-The resolver has the same type as the wrapped translations object, though the translatable items themselves are replaced
-by the type of the translation values.
-
 ### Patching
 
-The `patch` function allows you to add or modify locales to an existing translation object.
+The `patch` function allows you to add or modify locales to an existing translations object.
 
 It iterates over both the translations object recursively, and merges the locales for the translatable items.
 
@@ -190,19 +159,19 @@ There are two ways to ignore unspecified properties:
 Example:
 ```typescript
 
-const Base = {
+const t = useI18n({
     multi: {
         main: l({
             "de-DE-BY": "Bayern",
             "de-DE": "Deutsch",
         }),
     },
-};
+});
 
 locales.value = ["de-DE-NW"];
 console.log(t.main); // Deutsch
 
-patch(Base, {
+patch(t, {
     multi: {
         main: l({
             "de-DE-NW": "Nordrhein Westfalen",
@@ -210,20 +179,16 @@ patch(Base, {
     },
 });
 
-const t = resolve(Base);
-
 locales.value = ["de-DE-NW"];
 console.log(t.main); // Nordrhein Westfalen
 ```
-
-> You should apply `patch` on the original translations object, not on a resolver (obtained by the `resolve` function).  
 
 ## i18n for generic components
 
 This lightweight module is perfect for providing i18n in generic components.
 
 Just define your translations in a seperate file and export it. Then import the translations into your component(s) and 
-use them where you need them. Add translations for the locales that you wish to include by default.
+use them where you need them. Add translations for the locales that you wish to ship with your module.
 
 That's all you need to do.
 
@@ -233,7 +198,7 @@ override the defaults that you have set.
 Better still, `patch` enforces that all messages are translated. So if you add a new message in an update, your users 
 will receive a typescript error which forces them to provide translations for their own locales.
 
-## Howto
+## Tips & tricks
 
 This module doesn't (need to) ship with extra goodies such as string format patterns, pluralization, number and dates.
 

@@ -1,8 +1,8 @@
 import { patch } from "./patch";
 import { getLocales, locales, withLocales } from "./locales";
 import { l, LocaleItem, t } from "./Localizer";
-import { resolve } from "./resolve";
 import { computed, reactive } from "@vue/reactivity";
+import { useI18n } from "./index";
 
 describe("Localizer", () => {
     const L = l({ nl: "nl", "nl-NL": "nl-NL", "de-DE": "de-DE", "de-DE-BY": "de-DE-BY", fallback: "fallback" });
@@ -127,7 +127,7 @@ describe("Localizer", () => {
     });
 
     test("patch", () => {
-        const Base = {
+        const T = useI18n({
             multi: {
                 main: l({
                     nl: "Nederlands",
@@ -139,16 +139,16 @@ describe("Localizer", () => {
                     nl: "Nederlands",
                 }),
             },
-        };
+        });
 
-        expect(withLocales(["nl"], () => t(Base.multi.main))).toBe("Nederlands");
-        expect(withLocales(["de-DE-BY"], () => t(Base.multi.main))).toBe("Bayern");
-        expect(withLocales(["de-DE-NW"], () => t(Base.multi.main))).toBe("Deutsch");
-        expect(withLocales(["fr-BE"], () => t(Base.multi.main))).toBe("-");
+        expect(withLocales(["nl"], () => T.multi.main)).toBe("Nederlands");
+        expect(withLocales(["de-DE-BY"], () => T.multi.main)).toBe("Bayern");
+        expect(withLocales(["de-DE-NW"], () => T.multi.main)).toBe("Deutsch");
+        expect(withLocales(["fr-BE"], () => T.multi.main)).toBe("-");
 
-        expect(withLocales(["nl"], () => t(Base.multi.sub))).toBe("Nederlands");
+        expect(withLocales(["nl"], () => T.multi.sub)).toBe("Nederlands");
 
-        patch(Base, {
+        patch(T, {
             multi: {
                 main: l({
                     nl: "Nederlands 2",
@@ -158,13 +158,13 @@ describe("Localizer", () => {
             },
         });
 
-        expect(withLocales(["nl"], () => t(Base.multi.main))).toBe("Nederlands 2");
-        expect(withLocales(["de-DE"], () => t(Base.multi.main))).toBe("Deutsch");
-        expect(withLocales(["de-DE-NW"], () => t(Base.multi.main))).toBe("Nordrhein Westfalen");
-        expect(withLocales(["nl"], () => t(Base.multi.sub))).toBe("Nederlands");
+        expect(withLocales(["nl"], () => T.multi.main)).toBe("Nederlands 2");
+        expect(withLocales(["de-DE"], () => T.multi.main)).toBe("Deutsch");
+        expect(withLocales(["de-DE-NW"], () => T.multi.main)).toBe("Nordrhein Westfalen");
+        expect(withLocales(["nl"], () => T.multi.sub)).toBe("Nederlands");
     });
 
-    describe("locale proxy", () => {
+    describe("translator", () => {
         const Base = {
             main: l({
                 nl: "Nederlands",
@@ -181,27 +181,32 @@ describe("Localizer", () => {
             },
         };
 
+        test("data property", () => {
+            const proxy = useI18n(Base);
+            expect(proxy.data).toBe(Base);
+        });
+
         test("get locale", () => {
-            const proxy = resolve(Base);
+            const proxy = useI18n(Base);
             withLocales(["de-DE-NW"], () => {
                 expect(proxy.main).toBe("Deutsch");
             });
         });
 
         test("get deep locale", () => {
-            const proxy = resolve(Base);
+            const proxy = useI18n(Base);
             withLocales(["nl-NL"], () => {
                 expect(proxy.multi.level).toBe("Multi");
             });
         });
 
         test("get primitive value", () => {
-            const proxy = resolve(Base);
+            const proxy = useI18n(Base);
             expect(proxy.primitive).toBe(2);
         });
 
         test("get object value", () => {
-            const proxy = resolve(Base);
+            const proxy = useI18n(Base);
             expect(Object.keys(proxy.multi)).toEqual(["level"]);
         });
 
@@ -209,14 +214,14 @@ describe("Localizer", () => {
             test("wrap reactive proxy in locale proxy", () => {
                 locales.value = ["nl-NL"];
                 const base = reactive(Base);
-                const proxy = resolve(base);
+                const proxy = useI18n(base);
                 expect(proxy.multi.level).toBe("Multi");
             });
 
             test("locale proxy should react to reactivity", () => {
                 locales.value = ["nl-NL"];
                 const base = reactive(Base);
-                const proxy = resolve(base);
+                const proxy = useI18n(base);
 
                 const c = computed(() => proxy.multi.level);
                 expect(c.value).toBe("Multi");
@@ -231,14 +236,16 @@ describe("Localizer", () => {
             test("reactive prop defined later", () => {
                 locales.value = ["nl-NL"];
                 const base = reactive(Base);
-                const proxy = resolve(base);
+                const proxy = useI18n(base);
 
                 const c = computed(() => (proxy.multi as any).unknown);
                 expect(() => c.value).toThrowError("Key 'unknown' not found!");
 
-                (proxy.multi as any).unknown = l({ nl: "onbekend", en: "unknown" });
+                (base.multi as any).unknown = l({ nl: "onbekend", en: "unknown" });
                 expect(c.value).toBe("onbekend");
             });
+
+            //@todo: test setting reactive unknown prop on translator.
         });
     });
 
@@ -251,7 +258,7 @@ describe("Localizer", () => {
             }),
         };
 
-        const t = resolve(translations);
+        const t = useI18n(translations);
 
         locales.value = ["nl-NL"];
         expect(t.greetings("Evan")).toBe("Hallo beste Evan");

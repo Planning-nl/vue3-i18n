@@ -100,25 +100,29 @@ describe("Localizer", () => {
             all: l({ en: "all", fr: "tous", nl: "alle" }),
         };
 
-        describe("local", () => {
-            test("main locale", () => {
-                locales.value = ["en"];
-                expect(t(L.main.value)).toBe(L.main.value.locales["en"]);
-            });
-            test("sub locale, not existing", () => {
-                locales.value = ["en-US"];
-                expect(t(L.main.value)).toBe(L.main.value.locales["en"]);
-            });
-            test("sub locale, existing", () => {
-                locales.value = ["en-GB"];
-                expect(t(L.main.value)).toBe(L.main.value.locales["en-GB"]);
-            });
-            test("fallback to generic locale", () => {
-                locales.value = ["it"];
+        test("main locale", () => {
+            locales.value = ["en"];
+            expect(t(L.main.value)).toBe(L.main.value.locales["en"]);
+        });
 
-                // Use first specified value.
-                expect(t(L.main.sub.a)).toBe(L.main.sub.a.locales.fallback);
-            });
+        test("sub locale, not existing", () => {
+            locales.value = ["en-US"];
+            expect(t(L.main.value)).toBe(L.main.value.locales["en"]);
+        });
+
+        test("sub locale, existing", () => {
+            locales.value = ["en-GB"];
+            expect(t(L.main.value)).toBe(L.main.value.locales["en-GB"]);
+        });
+
+        test("fallback locale", () => {
+            locales.value = ["it"];
+            expect(t(L.main.sub.a)).toBe(L.main.sub.a.locales.fallback);
+        });
+
+        test("first locale locale", () => {
+            locales.value = ["it"];
+            expect(t(L.main.value)).toBe(L.main.value.locales["en"]);
         });
     });
 
@@ -177,10 +181,6 @@ describe("Localizer", () => {
             },
         };
 
-        test("create", () => {
-            const resolver = resolve(Base);
-        });
-
         test("get locale", () => {
             const proxy = resolve(Base);
             withLocales(["de-DE-NW"], () => {
@@ -203,23 +203,6 @@ describe("Localizer", () => {
         test("get object value", () => {
             const proxy = resolve(Base);
             expect(Object.keys(proxy.multi)).toEqual(["level"]);
-        });
-
-        test("set value produces error", () => {
-            const proxy = resolve(Base);
-            expect(() => ((proxy as any).main = "newValue")).toThrowError("Set is not allowed");
-        });
-
-        test("delete value produces error", () => {
-            const proxy = resolve(Base);
-            expect(() => delete (proxy as any).main).toThrowError("Delete is not allowed");
-        });
-
-        test("unknown path", () => {
-            const proxy = resolve(Base);
-            const v = (proxy as any).bad.path;
-            const s = "" + v;
-            expect(s).toBe("[*.bad.path]");
         });
 
         describe("reactivity", () => {
@@ -251,12 +234,10 @@ describe("Localizer", () => {
                 const proxy = resolve(base);
 
                 const c = computed(() => (proxy.multi as any).unknown);
-                const v = c.value;
-                expect("" + v).toBe("[*.unknown]");
+                expect(() => c.value).toThrowError("Key 'unknown' not found!");
 
-                (base.multi as any).unknown = l({ nl: "onbekend", en: "unknown" });
-
-                expect("" + c.value).toBe("onbekend");
+                (proxy.multi as any).unknown = l({ nl: "onbekend", en: "unknown" });
+                expect(c.value).toBe("onbekend");
             });
         });
     });

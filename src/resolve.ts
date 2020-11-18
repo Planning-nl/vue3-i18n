@@ -13,11 +13,11 @@ export type LocaleProxy<T extends AnyObject> = Readonly<
 type AnyObject = Record<any, unknown>;
 
 export function resolve<T extends AnyObject>(object: T): LocaleProxy<T> {
-    return new Proxy(object, localeProxyHandlers) as LocaleProxy<T>;
+    return new Proxy(object, localeProxyHandlers);
 }
 
-const localeProxyHandlers: any = {
-    get: function (target: AnyObject, key: string | symbol) {
+const localeProxyHandlers: ProxyHandler<any> = {
+    get: function (target, key) {
         const res = Reflect.get(target, key);
         if (typeof key === "string") {
             if (typeof res === "object") {
@@ -27,7 +27,7 @@ const localeProxyHandlers: any = {
                     return resolve(res);
                 }
             } else if (res === undefined) {
-                return getUnknownPathProxy(target, key);
+                throw new Error(`Key '${key}' not found!`);
             } else {
                 return res;
             }
@@ -35,34 +35,4 @@ const localeProxyHandlers: any = {
             return res;
         }
     },
-    set: function () {
-        throw new Error("Set is not allowed on locale proxies");
-    },
-    deleteProperty: function () {
-        throw new Error("Delete is not allowed on locale proxies");
-    },
 };
-
-export function getUnknownPathProxy(parent: AnyObject, key: string): UnknownPath {
-    const path = (parent instanceof UnknownPath ? parent.__path + "." : "") + key;
-    return new Proxy(new UnknownPath(path) as any, unknownPathProxyHandlers);
-}
-
-const unknownPathProxyHandlers: any = {
-    get: function (target: AnyObject, key: string | symbol) {
-        const res = Reflect.get(target, key);
-        if (typeof key === "string" && res === undefined) {
-            return getUnknownPathProxy(target, key);
-        } else {
-            return res;
-        }
-    },
-};
-
-class UnknownPath {
-    constructor(public __path: string) {}
-
-    toString(): string {
-        return `[*.${this.__path}]`;
-    }
-}

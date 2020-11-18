@@ -7,9 +7,7 @@ import { shallowReactive } from "@vue/reactivity";
 export function t<T extends LocalValue>(item: LocaleItem<T>, locales = getLocales()): T {
     for (let i = 0; i < locales.length; i++) {
         const result = getTranslation(item, locales[i]);
-        if (result) {
-            return result;
-        }
+        if (result) return result;
     }
 
     if (item.locales.fallback) {
@@ -33,22 +31,26 @@ function getTranslation<T extends LocalValue>(item: LocaleItem<T>, locale: strin
             const partialMatch = item.locales[partialLocale];
             if (partialMatch !== undefined) return partialMatch;
         }
-        return undefined!;
+        return undefined;
     }
 }
 
 function getFirstLocaleValue<T>(item: LocaleItem<T>): T | undefined {
-    const firstKey = Object.keys(item)[0];
+    const firstKey = Object.keys(item.locales)[0];
     return item.locales[firstKey];
 }
 
 export type LocalValue = any | LocalFunction;
 export type LocalFunction = (...args: any[]) => any;
 
-export class LocaleItem<T extends LocalValue = LocalValue> {
-    public readonly locales: Record<string, T>;
+type Locales<T extends LocalValue = LocalValue> = Record<string, T> & {
+    fallback?: T;
+};
 
-    constructor(locales: Record<string, T>) {
+export class LocaleItem<T extends LocalValue = LocalValue> {
+    public readonly locales: Locales;
+
+    constructor(locales: Locales) {
         this.locales = shallowReactive(locales);
     }
 
@@ -66,6 +68,6 @@ export class LocaleItem<T extends LocalValue = LocalValue> {
  * Creates an Item for the specified ItemLocales.
  * Notice that this only ensures that the typescript type is correct.
  */
-export function l<T extends LocalValue = LocalValue>(locales: Record<string, T>): LocaleItem<T> {
+export function l<T extends LocalValue = LocalValue>(locales: Locales<T>): LocaleItem<T> {
     return new LocaleItem<T>(locales);
 }

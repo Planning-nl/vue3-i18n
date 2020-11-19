@@ -82,7 +82,7 @@ locales.value = ["fr"];
 console.log(`${t.hello} ${t.group.world}`); // "👋 🌐"
 ```
 
-## Features
+## API
 
 ### Translations
 
@@ -116,9 +116,6 @@ language, the second group the region. After that, groups represent more and mor
 language.
 
 The special key `fallback` provides the fallback value when no other locale matches. 
-
-> When you'd like to get the translatable keys of an object, you should use `TranslationKeys<typeof translations>`. You 
-> can't just use `keyof typeof translations` because it would include the undesired `data` property.
 
 ### Locales
 Locales can be set using the exported `locales` ref. It accepts an array of strings or the default value `undefined` 
@@ -189,6 +186,10 @@ patch(t, {
 locales.value = ["de-DE-NW"];
 console.log(t.main); // Nordrhein Westfalen
 ```
+
+#### Patch locale
+
+> It's also possible to directly change the translations object. Use the `_raw` property to obtain a reference to it.
 
 ## i18n for generic components
 
@@ -327,16 +328,20 @@ function formatDate(date: Date, mode: TranslationKeys<typeof dateTimeFormats>): 
 console.log(formatDate(new Date(), "short"));
 ```
 
+> When you'd like to get the translatable keys of an object, you should use `TranslationKeys<typeof translations>`. You 
+> can't just use `keyof typeof translations` because it would include the undesired `data` property.
+
+
 ### Lazy loading
 
-If you really need this (although I wonder if anyone really does..), you could fetch the data in json format and then 
-run a `patch<any>`. The reactivity would automatically update your application once the data is loaded.
+If you really need this (although I wonder if anyone really does), you could fetch the data in json format and then 
+run a `patch` or `patchLocale`. The reactivity would automatically update your application once the data is loaded.
 
 ## Browser support
 
 Browser support for this module matches Vue3 browser support.
 
-Most importantly it relies on `Proxy`, so that means all modern browsers are supported but IE11 is not.
+Most importantly it relies on `Proxy`, so that means all modern browsers are supported. IE11 is not supported.
 
 ## License
 [Apache](https://opensource.org/licenses/Apache-2.0)

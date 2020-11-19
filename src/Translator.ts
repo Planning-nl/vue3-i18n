@@ -4,13 +4,11 @@
  */
 import { LocaleItem, t } from "./Localizer";
 
-export type Translator<T extends Translations> = Readonly<
-    {
-        [P in keyof T]: T[P] extends LocaleItem<infer U> ? U : T[P] extends Translations ? Translator<T[P]> : T[P];
-    }
-> & { data: T };
+export type Translator<T extends Translations> = {
+    readonly [P in keyof T]: T[P] extends LocaleItem<infer U> ? U : T[P] extends Translations ? Translator<T[P]> : T[P];
+} & { readonly _raw: T };
 
-export type TranslationKeys<T extends Translator<any>> = Exclude<keyof T, "data">;
+export type TranslationKeys<T extends Translator<any>> = Exclude<keyof T, "_raw">;
 
 export type Translations = { [key: string]: LocaleItem<any> | Translations };
 
@@ -19,10 +17,10 @@ export function i18n<T extends Translations>(object: T): Translator<T> {
 }
 
 const translatorProxyHandlers: ProxyHandler<any> = {
-    get: function (target, key) {
+    get(target, key) {
         const res = Reflect.get(target, key);
         if (typeof key === "string") {
-            if (key === "data") {
+            if (key === "_raw") {
                 return target;
             }
             if (typeof res === "object") {
@@ -40,5 +38,14 @@ const translatorProxyHandlers: ProxyHandler<any> = {
         } else {
             return res;
         }
+    },
+    set() {
+        return false;
+    },
+    defineProperty() {
+        return false;
+    },
+    deleteProperty() {
+        return false;
     },
 };

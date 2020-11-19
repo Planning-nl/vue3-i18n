@@ -8,6 +8,11 @@ export function getLocales(): Readonly<string[]> {
     return locales.value ?? navigator.languages;
 }
 
+export function getPrimaryLocale(): string {
+    const locales = getLocales();
+    return locales.length ? locales[0] : "fallback";
+}
+
 /**
  * Can be used to override the current locale temporarily.
  * Example usage: `const c = withLocale(["en-GB"], () => local(LocalizationSettings.currency))` ('GBP')

@@ -4,9 +4,20 @@
  */
 import { LocaleItem } from "./Localizer";
 import { Translations, Translator } from "./Translator";
+import { getPrimaryLocale, withLocales } from "./locales";
 
 export function patch<T extends Translations>(item: Translator<T>, patches: PatchObject<T>): void {
-    patchData(item.data, patches);
+    patchData(item._raw, patches);
+}
+
+export function patchLocale<T extends Translations>(
+    item: Translator<T>,
+    locale: string | null,
+    patches: PatchObject<T>,
+): void {
+    withLocales(locale !== null ? [locale] : [], () => {
+        patchData(item._raw, patches);
+    });
 }
 
 function patchData<T extends Translations>(item: T, patches: PatchObject<T>): void {
@@ -15,7 +26,11 @@ function patchData<T extends Translations>(item: T, patches: PatchObject<T>): vo
             const itemValue = item[key as keyof T];
             if (typeof itemValue === "object") {
                 if (itemValue instanceof LocaleItem) {
-                    itemValue.patch(value as LocaleItem<T>);
+                    if (value instanceof LocaleItem) {
+                        itemValue.patch(value as LocaleItem<T>);
+                    } else {
+                        itemValue.locales[getPrimaryLocale()] = value;
+                    }
                 } else {
                     patchData(itemValue as Translations, value as any);
                 }
@@ -30,5 +45,11 @@ function patchData<T extends Translations>(item: T, patches: PatchObject<T>): vo
  * Keys can be ignored by setting the undefined value.
  */
 export type PatchObject<T extends Translations> = {
-    [P in keyof T]: undefined | (T[P] extends Translations ? PatchObject<T[P]> : T[P]);
+    [P in keyof T]:
+        | undefined
+        | (T[P] extends LocaleItem<infer LI>
+              ? LocaleItem<LI> | LI
+              : T[P] extends Translations
+              ? PatchObject<T[P]>
+              : never);
 };

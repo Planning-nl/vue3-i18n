@@ -1,12 +1,18 @@
-import { patch, patchLocale } from "./patch";
+import { patch } from "./patch";
 import { getLocales, locales, withLocales } from "./locales";
 import { l, LocaleItem, t } from "./Localizer";
 import { computed, reactive } from "@vue/reactivity";
-import { i18n, TranslationKeys } from "./index";
-import DateTimeFormatOptions = Intl.DateTimeFormatOptions;
+import { formatDate, i18n, patchLocale } from "./index";
+import { pluralAmount, plural } from "./utils/plural";
+import { number } from "./utils/number";
+import { dateTimeFormats } from "./utils/formatDate";
 
 describe("Localizer", () => {
     const L = l({ nl: "nl", "nl-NL": "nl-NL", "de-DE": "de-DE", "de-DE-BY": "de-DE-BY", fallback: "fallback" });
+
+    beforeEach(() => {
+        locales.value = ["en"];
+    });
 
     afterEach(() => {
         locales.value = undefined;
@@ -14,6 +20,7 @@ describe("Localizer", () => {
 
     describe("locale", () => {
         test("fallback to navigator locale", () => {
+            locales.value = undefined;
             expect(getLocales()).toEqual(navigator.languages);
         });
         test("set/get locale", () => {
@@ -124,6 +131,18 @@ describe("Localizer", () => {
         test("first locale locale", () => {
             locales.value = ["it"];
             expect(t(L.main.value)).toBe(L.main.value.locales["en"]);
+        });
+
+        test("spread", () => {
+            const setupVars = { ...i18n(L) };
+            expect(setupVars.all).toBe("all");
+            expect(setupVars.main.value).toBe("main en");
+            locales.value = ["nl"];
+
+            // First level will only be translated once.
+            expect(setupVars.all).toBe("all");
+
+            expect(setupVars.main.value).toBe("main nl");
         });
     });
 
@@ -246,25 +265,10 @@ describe("Localizer", () => {
             expect((T as any).newKey).toBe("nieuwe key");
             expect((T as any).newBranch.subKey).toBe("sub key nl");
         });
+    });
 
-        test("direct value (locale) patch", () => {
-            const T = i18n({
-                main: l({
-                    "de-DE": "Deutsch",
-                }),
-            });
-
-            withLocales(["de-DE-NW"], () => {
-                patch(T, {
-                    main: "Nordrhein Westfalen",
-                });
-            });
-
-            expect(withLocales(["de-DE-BY"], () => T.main)).toBe("Deutsch");
-            expect(withLocales(["de-DE-NW"], () => T.main)).toBe("Nordrhein Westfalen");
-        });
-
-        test("patchLocale", () => {
+    describe("patchLocale", () => {
+        test("basic", () => {
             const T = i18n({
                 hello: l({} as LocaleItem<string>),
                 sub: {
@@ -283,6 +287,20 @@ describe("Localizer", () => {
             expect(T.hello + " " + T.sub.world).toBe("hello world");
         });
 
+        test("add key", () => {
+            const T = i18n({
+                main: l({
+                    "de-DE": "Deutsch",
+                }),
+            });
+
+            patchLocale(T, "fallback", {
+                new: "new",
+            } as any);
+
+            expect((T as any).new).toBe("new");
+        });
+
         test("empty locale patch", () => {
             const T = i18n({
                 main: l({
@@ -290,10 +308,8 @@ describe("Localizer", () => {
                 }),
             });
 
-            withLocales([], () => {
-                patch(T, {
-                    main: "other",
-                });
+            patchLocale(T, "fallback", {
+                main: "other",
             });
 
             expect(withLocales(["it"], () => T.main)).toBe("other");
@@ -412,12 +428,39 @@ describe("Localizer", () => {
         expect(t.greetings("Evan")).toBe("Hello dear Evan");
     });
 
-    test("TranslationKeys", () => {
-        const dateTimeFormats = i18n({
-            short: l({
-                "en-US": { year: "numeric", month: "short", day: "numeric" },
-                fallback: { datestyle: "short" },
-            }) as LocaleItem<DateTimeFormatOptions>,
+    describe("plural", () => {
+        test("simple", () => {
+            const t = i18n({
+                banana: l({
+                    en: plural("banana", "bananas"),
+                }),
+            });
+
+            expect(t.banana(1)).toBe("banana");
+            expect(t.banana(2)).toBe("bananas");
+        });
+
+        test("amount", () => {
+            const t = i18n({
+                bananas: l({
+                    en: pluralAmount("no bananas", "one banana", "{n} bananas"),
+                }),
+            });
+
+            expect(t.bananas(0)).toBe("no bananas");
+            expect(t.bananas(1)).toBe("one banana");
+            expect(t.bananas(10)).toBe("10 bananas");
+        });
+    });
+
+    test("number", () => {
+        locales.value = ["nl-NL"];
+        const v = 99999.123;
+        expect(number(v)).toBe(Intl.NumberFormat("nl-NL").format(v));
+    });
+
+    test("dateTimeFormat", () => {
+        patch(dateTimeFormats, {
             long: l({
                 "en-US": {
                     year: "numeric",
@@ -436,21 +479,28 @@ describe("Localizer", () => {
                     minute: "numeric",
                     hour12: true,
                 },
-                fallback: { datestyle: "long" },
-            }) as LocaleItem<DateTimeFormatOptions>,
+            }),
         });
 
-        function formatDate(date: Date, mode: TranslationKeys<typeof dateTimeFormats>): string {
-            const options = dateTimeFormats[mode];
-            return new Intl.DateTimeFormat(getLocales() as string[], options).format(date);
-        }
+        patchLocale(dateTimeFormats, "en", {
+            custom: { weekday: "long" },
+        });
 
         const d = new Date(2020, 10, 20, 12, 41, 10);
 
         locales.value = ["en-US"];
+        expect(formatDate(d, "unknown")).toBe("11/20/2020");
+        expect(formatDate(d, "custom")).toBe("Friday");
         expect(formatDate(d, "long")).toBe("Fri, Nov 20, 2020, 12:41 PM");
 
         locales.value = ["ja-JP"];
         expect(formatDate(d, "long")).toBe("2020年11月20日(金) 午後0:41");
+
+        const long = dateTimeFormats._raw["long"].locales;
+        delete long["en-US"];
+        delete long["ja-JP"];
+
+        locales.value = ["en-US"];
+        expect(formatDate(d, "long")).toBe("11/20/2020");
     });
 });

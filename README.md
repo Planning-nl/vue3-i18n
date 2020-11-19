@@ -4,11 +4,9 @@ This is a lightweight and type safe i18n library for [Vue 3](https://github.com/
 
 This module:
 * provides a way to define **translation objects**
-* provides getting and setting the **active locales**
-* provides a **translation function** that returns the correct translation based on the active locale 
-* provides an ergonomic way to use these translations in templates
-
-It does so in just *200 lines* of code.
+* provides getting and setting the **active locales** 
+* provides an ergonomic way to use these translations
+* provides a way to change and extend translation objects
 
 ## Why Vue3-i18n?
 
@@ -16,9 +14,9 @@ It does so in just *200 lines* of code.
 * Flexible enough to handle even complex i18n use cases
 * Ergonomic syntax
 * Locales and translations are reactive (@vue/reactivity)
-* Tiny in size
+* Small in size (300 lines of code)
 * Fast (translates 3M items per second)
-* Type safety (when using typescript)
+* Type safety
 * Good support for IDE features such as *find usages* and *rename*
 
 ## Installation
@@ -52,6 +50,9 @@ export default defineComponent({
     <p v-text="t.hello"></p>
 </template>
 ```
+
+> Notice that you shouldn't *spread* your i18n proxy in the setup (`{...i18n({..})`) 
+> If it contains translatable items on the root level, those will only be translated once initially.
 
 You could also define a shared set that can be imported and used throughout your app:
 
@@ -126,7 +127,7 @@ tried (and so on).
 
 The `getLocales()` function returns the array of currently active locales.
 
-#### Translation rules
+### Localization
 
 When fetching a translation, one of the keys will be selected for which to return
 the value. The following rules apply:
@@ -142,20 +143,20 @@ The function `withLocales` can be used to fetch a translation for a specific loc
 a callback that produces a value. Example:
 
 ```typescript
-const hallo = withLocales(["nl"], () => t.hello);
+const hallo = withLocales(["nl", "en-US"], () => t.hello);
 ```
 
 ### Patching
 
-The `patch` function allows you to add or modify locales to an existing translations object.
+The `patch` function allows you to conveniently add or modify locales to an existing translations object.
 
 It iterates over both the translations object recursively, and merges the locales for the translatable items.
 
 Using the patch function ensures that all translation items have been specified. If some keys have not been specified a 
 typescript error will occur. This makes sure you didn't forget one. 
 
-> This is especially handy when you patch the translations of a 3rd party component which may be updated with new 
-> translations. See 'i18n for generic components'.
+> Although patching is the advised method of changing a translations set, it's also possible to directly change the 
+> translations object. Use the `_raw` property to obtain a reference to it.
 
 There are two ways to ignore unspecified properties: 
 1. By specifying the property value `undefined`, it will ignore it completely.
@@ -187,30 +188,15 @@ locales.value = ["de-DE-NW"];
 console.log(t.main); // Nordrhein Westfalen
 ```
 
-#### Patch locale
+It's also possible to add or change a specific locale using `patchLocale`:
 
-> It's also possible to directly change the translations object. Use the `_raw` property to obtain a reference to it.
-
-## i18n for generic components
-
-This lightweight module is perfect for providing i18n in generic components.
-
-Just define your translations in a seperate file and export it. Then import the translations into your component(s) and 
-use them where you need them. Add translations for the locales that you wish to ship with your module.
-
-That's all you need to do.
-
-This enables applications using your component to `patch` the translation set with additional locales, or even to 
-override the defaults that you have set.
-
-Better still, `patch` enforces that all messages are translated. So if you add a new message in an update, your users 
-will receive a typescript error which forces them to provide translations for their own locales.
-
-## Tips & tricks
-
-This module doesn't (need to) ship with extra goodies such as string format patterns, pluralization, number and dates.
-
-We don't need to because it's easy to implement it by yourself. The following examples might give you some ideas. 
+```typescript
+patchLocale(t, "nl", { 
+    multi: { 
+        main: "Nederlands" 
+    }
+});
+```
 
 ### String format patterns
 
@@ -239,103 +225,84 @@ console.log(t.greetings("Evan")); // "Hello dear Evan";
 
 ### Pluralization
 
-What method of pluralization you need may depend on your application and used languages.
-
-But as an example, you could define a factory that produces a count-to-string function:
+A lot of (if not most) languages have a singular and plural form. This library support helper functions for those forms.
 
 ```typescript
-import { l, i18n, locale } from "@planning.nl/vue3-i18n";
-
 const t = i18n({
-    bananas: l({
-        en: plural("no bananas", "one banana", "{n} bananas"),
-        nl: plural("geen bananen", "één banaan", "{n} bananen"),
+    banana: l({
+        en: plural("banana", "bananas"),
+    }),
+    cost: l({
+        en: amount("free", "one euro", "{n} euros"),
     }),
 });
 
-export function plural(none: string, one: string, multiple: string): (count: number) => string {
-    return (count: number): string => {
-        if (count === 0) {
-            return none;
-        } else if (count === 1) {
-            return one;
-        } else {
-            return multiple.replace("{n}", "" + count);
-        }
-    };
-}
-
 console.log(t.bananas(10)); // 10 bananas
+console.log(t.cost(1)); // one euro
+console.log(t.cost(10.55)); // 10.55 euros
 ```
 
-Some languages, such as Russian, have complex pluralization rules. This could be easily solved by creating a specific
-`pluralRussian` factory that accepts different options but produces a function with the same signature. 
+> You may prefer another method of pluralization, or you may need another plural rules for a specific locale. In that 
+> case you can add your own pluralization functions.
 
 ### Number formatting
 
-Modern browsers can already format numbers based on a locale, so no need to include it in this library. 
-
-You may want to add your own helper function though. We simply must 'feed' it with our current locales:
+You can use the `number` function to format a number. This library relies on the `Intl.NumberFormat` browser 
+functionality for locale-aware number formatting.
+ 
+The `number` function accepts a number and additional [Intl.NumberFormatOptions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat) number format options. 
 
 ```typescript
-import { getLocales } from "@planning.nl/vue3-i18n";
-
-export function number(v: number, options: NumberFormatOptions = {}): string {
-    const formatter = Intl.NumberFormat(getLocales(), options);
-    return formatter.format(v);
-}
+console.log(number(10, { style: 'currency', currency: 'EUR' }));
 ```
 
 ### Date formatting
-Browser support locale date formatting using `DateTimeFormat`. So same as above.
 
-If you need [https://kazupon.github.io/vue-i18n/guide/datetime.html](custom definition formats), this could be a good
-approach:
+You can use the `formatDate` function to format a date. This library relies on the `Intl.DateTimeFormat` browser 
+functionality.
+
+You can customize date formats by patching the global formats object:
 
 ```typescript
-const dateTimeFormats = i18n({
-    short: l({
-        "en-US": { year: "numeric", month: "short", day: "numeric" },
-        fallback: { datestyle: "short" },
-    }) as LocaleItem<DateTimeFormatOptions>,
-    long: l({
-        "en-US": {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            weekday: "short",
-            hour: "numeric",
-            minute: "numeric",
-        },
-        "ja-JP": {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            weekday: "short",
-            hour: "numeric",
-            minute: "numeric",
-            hour12: true,
-        },
-        fallback: { datestyle: "long" },
-    }) as LocaleItem<DateTimeFormatOptions>,
+patchLocale(dateTimeFormats, "en-US", {
+    long: {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        weekday: "short",
+        hour: "numeric",
+        minute: "numeric",
+    },        
+    custom: { weekday: "long" },
 });
 
-function formatDate(date: Date, mode: TranslationKeys<typeof dateTimeFormats>): string {
-    const options = dateTimeFormats[mode];
-    return new Intl.DateTimeFormat(getLocales() as string[], options).format(date);
-}
-
-console.log(formatDate(new Date(), "short"));
+locales.value = ["en-US"];
+console.log(formatDate(new Date(), "long"));
+console.log(formatDate(new Date(), "custom"));
 ```
-
-> When you'd like to get the translatable keys of an object, you should use `TranslationKeys<typeof translations>`. You 
-> can't just use `keyof typeof translations` because it would include the undesired `data` property.
-
 
 ### Lazy loading
 
 If you really need this (although I wonder if anyone really does), you could fetch the data in json format and then 
 run a `patch` or `patchLocale`. The reactivity would automatically update your application once the data is loaded.
+
+## i18n for generic components
+
+This lightweight module is perfect for providing i18n in generic component modules.
+
+Define your translations in a seperate file and export it as part of your module. Then import the translations into your 
+component(s) and use them where you need them. Add translations for the locales that you wish to ship with your module.
+
+This enables applications using your component to `patch` the translation set with additional locales, or even to 
+override the defaults that you have set.
+
+Better still, `patch` enforces that *all messages* are translated. If you add a new message in an update, your users 
+will receive a typescript error which forces them to provide translations for their own locales.
+
+## Notes
+
+> When you'd like to get the translatable keys of an object, you should use `TranslationKeys<typeof translations>`. You 
+> can't just use `keyof typeof translations` because it would include the undesired `data` property.
 
 ## Browser support
 

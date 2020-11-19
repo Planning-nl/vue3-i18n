@@ -30,13 +30,12 @@ It does so in just *200 lines* of code.
 ## Basic usage
 
 ```typescript
-import { l, useI18n, locale } from "@planning.nl/vue3-i18n";
-
+import { l, i18n, locale } from "@planning.nl/vue3-i18n";
 export default defineComponent({
     setup() {
         return {
             locale,
-            t: useI18n({
+            t: i18n({
                 hello: l({
                     en: "hello",
                     nl: "hallo",
@@ -57,7 +56,7 @@ export default defineComponent({
 You could also define a shared set that can be imported and used throughout your app:
 
 ```typescript
-import { l, useI18n, locale } from "@planning.nl/vue3-i18n";
+import { l, i18n, locale } from "@planning.nl/vue3-i18n";
 
 const translations = {
     hello: l({
@@ -74,7 +73,7 @@ const translations = {
     }
 };
 
-export const t = useI18n(translations);
+export const t = i18n(translations);
 
 locales.value = ["nl-NL"];
 console.log(`${t.hello} ${t.group.world}`); // "hallo wereld"
@@ -85,16 +84,19 @@ console.log(`${t.hello} ${t.group.world}`); // "👋 🌐"
 
 ## Features
 
-### useI18n
+### i18n
 
-You can define translations in a nested object. Keys can either be objects (for grouping) or translatable items,
-which can be created using the `l` shortcut function. It accepts a plain object with translated values, keyed by locale. 
+You can define translations in a nested object. Entries can either be objects (for grouping) or translatable items.
+
+Translatable items can be created using the `l` shortcut function. It accepts a plain object with translated values, 
+keyed by locale.
+ 
 Example:
 
 ```typescript
-import { l, useI18n } from "@planning.nl/vue3-i18n";
+import { l, i18n } from "@planning.nl/vue3-i18n";
 
-const translations = useI18n({
+const translations = i18n({
     hello: l({
         en: "hello",
         "en-US": "hi",
@@ -159,7 +161,7 @@ There are two ways to ignore unspecified properties:
 
 Example:
 ```typescript
-const t = useI18n({
+const t = i18n({
     multi: {
         main: l({
             "de-DE-BY": "Bayern",
@@ -212,9 +214,9 @@ This library doesn't post-process strings at all, and it doesn't have any such p
 provide flexibility as well as type safety. Example:
 
 ```typescript
-import { l, useI18n } from "@planning.nl/vue3-i18n";
+import { l, i18n } from "@planning.nl/vue3-i18n";
 
-const t = useI18n({
+const t = i18n({
     dear: l({ en: "dear", nl: "beste" }),
     greetings: l({
         en: (name: string) => `Hello ${t.dear} ${name}`,
@@ -236,9 +238,9 @@ What method of pluralization you need may depend on your application and used la
 But as an example, you could define a factory that produces a count-to-string function:
 
 ```typescript
-import { l, useI18n, locale } from "@planning.nl/vue3-i18n";
+import { l, i18n, locale } from "@planning.nl/vue3-i18n";
 
-const t = useI18n({
+const t = i18n({
     bananas: l({
         en: plural("no bananas", "one banana", "{n} bananas"),
         nl: plural("geen bananen", "één banaan", "{n} bananen"),
@@ -285,9 +287,9 @@ If you need [https://kazupon.github.io/vue-i18n/guide/datetime.html](custom defi
 approach:
 
 ```typescript
-import { l, t, getLocales } from "@planning.nl/vue3-i18n";
+import { l, getLocales, i18n } from "@planning.nl/vue3-i18n";
 
-const dateTimeFormats = {
+const dateTimeFormats = i18n({
     short: l({
         "en-US": {year: "numeric", month: "short", day: "numeric"},
         fallback: {datestyle: "short"}
@@ -303,10 +305,10 @@ const dateTimeFormats = {
         },
         fallback: {datestyle: "long"}
     })
-}
+})
 
 export function formatDate(date: Date, mode: keyof typeof dateTimeFormats): string {
-    const options = t(dateTimeFormats[mode]);
+    const options = dateTimeFormats[mode];
     return (new Intl.DateTimeFormat(getLocales(), options)).format(date);
 };
 

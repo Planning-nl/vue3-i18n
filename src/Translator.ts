@@ -4,13 +4,15 @@
  */
 import { LocaleItem, t } from "./Localizer";
 
-export type Translator<T extends AnyObject> = Readonly<
+export type Translator<T extends Translations> = Readonly<
     {
-        [P in keyof T]: T[P] extends LocaleItem<infer U> ? U : T[P] extends AnyObject ? Translator<T[P]> : T[P];
+        [P in keyof T]: T[P] extends LocaleItem<infer U> ? U : T[P] extends Translations ? Translator<T[P]> : T[P];
     }
 > & { data: T };
 
-export function getTranslator<T extends AnyObject>(object: T): Translator<T> {
+export type Translations = { [key: string]: LocaleItem<any> | Translations };
+
+export function i18n<T extends Translations>(object: T): Translator<T> {
     return new Proxy(object, translatorProxyHandlers);
 }
 
@@ -25,11 +27,12 @@ const translatorProxyHandlers: ProxyHandler<any> = {
                 if (res instanceof LocaleItem) {
                     return t(res);
                 } else {
-                    return getTranslator(res);
+                    return i18n(res);
                 }
-            } else if (res === undefined) {
-                throw new Error(`Key '${key}' not found!`);
             } else {
+                if (res === undefined) {
+                    console.warn(`Key '${key}' not found!`);
+                }
                 return res;
             }
         } else {
@@ -37,5 +40,3 @@ const translatorProxyHandlers: ProxyHandler<any> = {
         }
     },
 };
-
-export type AnyObject = Record<any, unknown>;

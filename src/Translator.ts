@@ -28,7 +28,7 @@ const translatorProxyHandlers: ProxyHandler<any> = {
                     return i18n(res);
                 }
             } else {
-                if (res === undefined && key.startsWith(VUE_INTERNAL_PREFIX)) {
+                if (res === undefined && !key.startsWith(VUE_INTERNAL_PREFIX)) {
                     console.warn(`Key '${key}' not found!`);
                 }
                 return res;

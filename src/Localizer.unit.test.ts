@@ -381,31 +381,12 @@ describe("Localizer", () => {
 
             test("locale proxy should react to reactivity", () => {
                 locales.value = ["nl-NL"];
-                const Base = getBase();
-                const base = reactive(Base);
-                const proxy = i18n(base);
 
-                const c = computed(() => proxy.multi.level);
-                expect(c.value).toBe("Multi");
-
-                base.multi.level.patch(
-                    new LocaleItem<string>({ nl: "Multi 2" }),
-                );
-
-                expect(c.value).toBe("Multi 2");
-            });
-
-            test("reactive prop defined later", () => {
-                locales.value = ["nl-NL"];
-                const Base = getBase();
-                const base = reactive(Base);
-                const proxy = i18n(base);
-
-                const c = computed(() => (proxy.multi as any).unknown);
-                expect(c.value).toBe(undefined);
-
-                (base.multi as any).unknown = l({ nl: "onbekend", en: "unknown" });
-                expect(c.value).toBe("onbekend");
+                const reactiveTranslations = i18n(reactive({} as any)) as any;
+                expect(reactiveTranslations.dynamic?.prop).toBe(undefined);
+                reactiveTranslations._raw.dynamic = { prop: l({ en: "hello", nl: "hallo" }) };
+                expect(reactiveTranslations.dynamic?.prop).toBe("hallo");
+                console.log(reactiveTranslations.dynamic?.prop); // "hello"
             });
         });
     });

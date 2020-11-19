@@ -299,10 +299,22 @@ override the defaults that you have set.
 Better still, `patch` enforces that *all messages* are translated. If you add a new message in an update, your users 
 will receive a typescript error which forces them to provide translations for their own locales.
 
-## Notes
+## Advanced use cases
 
-> When you'd like to get the translatable keys of an object, you should use `TranslationKeys<typeof translations>`. You 
-> can't just use `keyof typeof translations` because it would include the undesired `_raw` property.
+### Reactive translation objects
+Translations are reactive based on the specified locale values. If you have a dynmically changing translations object 
+and need it to be reactive, wrap the object into `reactive` before passing it to `i18n`:
+
+```typescript
+const reactiveTranslations = i18n(reactive({} as any)) as any;
+console.log(reactiveTranslations.dynamic?.prop); // undefined
+reactiveTranslations._raw.dynamic = { prop: l({ nl: "hallo", en: "hello" }) };
+console.log(reactiveTranslations.dynamic?.prop); // "hello"
+```
+
+### Translation Keys
+When you'd like to get the translatable keys of an object, you should use `TranslationKeys<typeof translations>`. You 
+can't just use `keyof typeof translations` because it would include the undesired `_raw` property.
 
 ## Browser support
 

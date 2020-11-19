@@ -12,6 +12,8 @@ export function i18n<T extends Translations>(object: T): Translator<T> {
     return new Proxy(object, translatorProxyHandlers);
 }
 
+const VUE_INTERNAL_PREFIX = "__";
+
 const translatorProxyHandlers: ProxyHandler<any> = {
     get(target, key) {
         const res = Reflect.get(target, key);
@@ -26,7 +28,7 @@ const translatorProxyHandlers: ProxyHandler<any> = {
                     return i18n(res);
                 }
             } else {
-                if (res === undefined) {
+                if (res === undefined && key.startsWith(VUE_INTERNAL_PREFIX)) {
                     console.warn(`Key '${key}' not found!`);
                 }
                 return res;

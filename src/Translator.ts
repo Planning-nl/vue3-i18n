@@ -1,7 +1,3 @@
-/**
- * Patch a localization object.
- * When the source object will change type later, typescript will warn about non-localized keys.
- */
 import { LocaleItem, t } from "./Localizer";
 
 export type Translator<T extends Translations> = {

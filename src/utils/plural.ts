@@ -1,6 +1,6 @@
 import { number } from "./number";
 
-export function plural(singular: string, plural: string): (n: number) => string {
+export function plural(singular: string, plural: string): (n?: number) => string {
     return (n: number = 1): string => {
         if (n > 1) {
             return plural;
@@ -10,8 +10,8 @@ export function plural(singular: string, plural: string): (n: number) => string 
     };
 }
 
-export function pluralAmount(none: string, one: string, multiple: string): (n: number) => string {
-    return (n: number): string => {
+export function pluralAmount(none: string, one: string, multiple: string): (n?: number) => string {
+    return (n: number = 1): string => {
         if (n === 0) {
             return none;
         } else if (n <= 1) {

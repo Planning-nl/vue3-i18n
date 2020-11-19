@@ -84,9 +84,11 @@ console.log(`${t.hello} ${t.group.world}`); // "👋 🌐"
 
 ## Features
 
-### i18n
+### Translations
 
-You can define translations in a nested object. Entries can either be objects (for grouping) or translatable items.
+You can define translations in a nested object. You then feed this translations object to the `i18n` function, which 
+produces a translator object. `i18n` expects a nested object with entries that can either be translatable items or
+other objects (for grouping).
 
 Translatable items can be created using the `l` shortcut function. It accepts a plain object with translated values, 
 keyed by locale.
@@ -114,6 +116,9 @@ language, the second group the region. After that, groups represent more and mor
 language.
 
 The special key `fallback` provides the fallback value when no other locale matches. 
+
+> When you'd like to get the translatable keys of an object, you should use `TranslationKeys<typeof translations>`. You 
+> can't just use `keyof typeof translations` because it would include the undesired `data` property.
 
 ### Locales
 Locales can be set using the exported `locales` ref. It accepts an array of strings or the default value `undefined` 
@@ -287,30 +292,37 @@ If you need [https://kazupon.github.io/vue-i18n/guide/datetime.html](custom defi
 approach:
 
 ```typescript
-import { l, getLocales, i18n } from "@planning.nl/vue3-i18n";
-
 const dateTimeFormats = i18n({
     short: l({
-        "en-US": {year: "numeric", month: "short", day: "numeric"},
-        fallback: {datestyle: "short"}
-    }),
+        "en-US": { year: "numeric", month: "short", day: "numeric" },
+        fallback: { datestyle: "short" },
+    }) as LocaleItem<DateTimeFormatOptions>,
     long: l({
         "en-US": {
-            year: "numeric", month: "short", day: "numeric",
-            weekday: "short", hour: "numeric", minute: "numeric"
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            weekday: "short",
+            hour: "numeric",
+            minute: "numeric",
         },
         "ja-JP": {
-            year: "numeric", month: "short", day: "numeric",
-            weekday: "short", hour: "numeric", minute: "numeric", hour12: true
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            weekday: "short",
+            hour: "numeric",
+            minute: "numeric",
+            hour12: true,
         },
-        fallback: {datestyle: "long"}
-    })
-})
+        fallback: { datestyle: "long" },
+    }) as LocaleItem<DateTimeFormatOptions>,
+});
 
-export function formatDate(date: Date, mode: keyof typeof dateTimeFormats): string {
+function formatDate(date: Date, mode: TranslationKeys<typeof dateTimeFormats>): string {
     const options = dateTimeFormats[mode];
-    return (new Intl.DateTimeFormat(getLocales(), options)).format(date);
-};
+    return new Intl.DateTimeFormat(getLocales() as string[], options).format(date);
+}
 
 console.log(formatDate(new Date(), "short"));
 ```

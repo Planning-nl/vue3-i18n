@@ -2,7 +2,8 @@ import { patch } from "./patch";
 import { getLocales, locales, withLocales } from "./locales";
 import { l, LocaleItem, t } from "./Localizer";
 import { computed, reactive } from "@vue/reactivity";
-import { i18n } from "./index";
+import { i18n, TranslationKeys } from "./index";
+import DateTimeFormatOptions = Intl.DateTimeFormatOptions;
 
 describe("Localizer", () => {
     const L = l({ nl: "nl", "nl-NL": "nl-NL", "de-DE": "de-DE", "de-DE-BY": "de-DE-BY", fallback: "fallback" });
@@ -349,5 +350,89 @@ describe("Localizer", () => {
 
         locales.value = ["en"];
         expect(t.greetings("Evan")).toBe("Hello dear Evan");
+    });
+
+    test("TranslationKeys", () => {
+        const dateTimeFormats = i18n({
+            short: l({
+                "en-US": { year: "numeric", month: "short", day: "numeric" },
+                fallback: { datestyle: "short" },
+            }) as LocaleItem<DateTimeFormatOptions>,
+            long: l({
+                "en-US": {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    weekday: "short",
+                    hour: "numeric",
+                    minute: "numeric",
+                },
+                "ja-JP": {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    weekday: "short",
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: true,
+                },
+                fallback: { datestyle: "long" },
+            }) as LocaleItem<DateTimeFormatOptions>,
+        });
+
+        function formatDate(date: Date, mode: TranslationKeys<typeof dateTimeFormats>): string {
+            const options = dateTimeFormats[mode];
+            return new Intl.DateTimeFormat(getLocales() as string[], options).format(date);
+        }
+
+        const d = new Date(2020, 10, 20, 12, 41, 10);
+
+        locales.value = ["en-US"];
+        expect(formatDate(d, "long")).toBe("Fri, Nov 20, 2020, 12:41 PM");
+
+        locales.value = ["ja-JP"];
+        expect(formatDate(d, "long")).toBe("2020年11月20日(金) 午後0:41");
+    });
+
+    test("TranslationKeys", () => {
+        const dateTimeFormats = i18n({
+            short: l({
+                "en-US": { year: "numeric", month: "short", day: "numeric" },
+                fallback: { datestyle: "short" },
+            }) as LocaleItem<DateTimeFormatOptions>,
+            long: l({
+                "en-US": {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    weekday: "short",
+                    hour: "numeric",
+                    minute: "numeric",
+                },
+                "ja-JP": {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    weekday: "short",
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: true,
+                },
+                fallback: { datestyle: "long" },
+            }) as LocaleItem<DateTimeFormatOptions>,
+        });
+
+        function formatDate(date: Date, mode: TranslationKeys<typeof dateTimeFormats>): string {
+            const options = dateTimeFormats[mode];
+            return new Intl.DateTimeFormat(getLocales() as string[], options).format(date);
+        }
+
+        const d = new Date(2020, 10, 20, 12, 41, 10);
+
+        locales.value = ["en-US"];
+        expect(formatDate(d, "long")).toBe("Fri, Nov 20, 2020, 12:41 PM");
+
+        locales.value = ["ja-JP"];
+        expect(formatDate(d, "long")).toBe("2020年11月20日(金) 午後0:41");
     });
 });

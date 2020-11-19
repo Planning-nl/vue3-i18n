@@ -10,6 +10,8 @@ export type Translator<T extends Translations> = Readonly<
     }
 > & { data: T };
 
+export type TranslationKeys<T extends Translator<any>> = Exclude<keyof T, "data">;
+
 export type Translations = { [key: string]: LocaleItem<any> | Translations };
 
 export function i18n<T extends Translations>(object: T): Translator<T> {

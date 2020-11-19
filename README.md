@@ -302,7 +302,7 @@ will receive a typescript error which forces them to provide translations for th
 ## Notes
 
 > When you'd like to get the translatable keys of an object, you should use `TranslationKeys<typeof translations>`. You 
-> can't just use `keyof typeof translations` because it would include the undesired `data` property.
+> can't just use `keyof typeof translations` because it would include the undesired `_raw` property.
 
 ## Browser support
 

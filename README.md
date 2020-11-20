@@ -321,14 +321,16 @@ You *don't* need this when you're only adding/changing translations for existing
 You *do* need this when parts of your set may be added, removed or reassigned dynamically.
 
 ### Translation Keys
-When you'd like to get the translatable keys of an object, you should use `TranslationKeys<typeof translations>`. You 
-can't just use `keyof typeof translations` because it would include the undesired `_raw` property.
+When you'd like to get the translatable keys (type) of a translator object, be aware that the `_raw` key is included. 
+This is probably not what you want. 
+
+You can can use `keyof typeof translations["_raw"]` to get to the 'real' keys.
 
 ## Browser support
 
 Browser support for this module matches Vue3 browser support.
 
-Most importantly it relies on `Proxy`, so that means all modern browsers are supported. IE11 is not supported.
+> This module relies on `Proxy`, which means that IE11 is not supported.
 
 ## License
 [Apache](https://opensource.org/licenses/Apache-2.0)

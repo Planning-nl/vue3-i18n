@@ -36,7 +36,7 @@ export type PatchObject<T extends Translations> = {
     [P in keyof T]:
         | undefined
         | (T[P] extends TranslatableItem<infer LI>
-              ? TranslatableItem<LI>
+              ? TranslatableItem<LI | undefined>
               : T[P] extends Translations
               ? PatchObject<T[P]>
               : never);

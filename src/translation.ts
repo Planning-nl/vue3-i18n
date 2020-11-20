@@ -47,13 +47,13 @@ type LocaleValues<T> = Record<string, T> & {
 };
 
 export class TranslatableItem<T> {
-    public readonly locales: LocaleValues<T>;
+    public readonly locales: LocaleValues<T | undefined>;
 
-    constructor(locales: LocaleValues<T>) {
+    constructor(locales: LocaleValues<T | undefined>) {
         this.locales = shallowReactive(locales);
     }
 
-    patch(other: TranslatableItem<T>): void {
+    patch(other: TranslatableItem<T | undefined>): void {
         Object.assign(this.locales, other.locales);
     }
 
@@ -67,6 +67,6 @@ export class TranslatableItem<T> {
  * Creates an Item for the specified ItemLocales.
  * Notice that this only ensures that the typescript type is correct.
  */
-export function l<T>(locales: LocaleValues<T>): TranslatableItem<T> {
+export function l<T>(locales: LocaleValues<T | undefined>): TranslatableItem<T> {
     return new TranslatableItem<T>(locales);
 }

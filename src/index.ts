@@ -1,8 +1,10 @@
-export { i18n, Translations, Translator, TranslationKeys } from "./Translator";
+export { i18n, Translator } from "./translator";
 export { getLocales, locales, withLocales } from "./locales";
-export { l } from "./Localizer";
+export { l } from "./translation";
 export { patch } from "./patch";
 export { patchLocale } from "./patchLocale";
 export { plural } from "./utils/plural";
 export { number } from "./utils/number";
-export { formatDate, dateTimeFormats } from "./utils/formatDate";
+export { datetime, dateTimeFormats } from "./utils/datetime";
+export { Translations } from "./translation";
+export { TranslationKeys } from "./translator";

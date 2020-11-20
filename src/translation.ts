@@ -1,10 +1,12 @@
 import { getLocales } from "./locales";
 import { shallowReactive } from "@vue/reactivity";
 
+export type Translations = { [key: string]: TranslatableItem<any> | Translations };
+
 /**
  * Returns the item's translation for the current locale.
  */
-export function t<T extends LocalValue>(item: LocaleItem<T>, locales = getLocales()): T {
+export function t<T>(item: TranslatableItem<T>, locales = getLocales()): T {
     for (let i = 0; i < locales.length; i++) {
         const result = getTranslation(item, locales[i]);
         if (result) return result;
@@ -17,7 +19,7 @@ export function t<T extends LocalValue>(item: LocaleItem<T>, locales = getLocale
     }
 }
 
-function getTranslation<T extends LocalValue>(item: LocaleItem<T>, locale: string): T | undefined {
+function getTranslation<T>(item: TranslatableItem<T>, locale: string): T | undefined {
     const match = item.locales[locale];
     if (match !== undefined) {
         // Quick path: perfect match.
@@ -35,31 +37,28 @@ function getTranslation<T extends LocalValue>(item: LocaleItem<T>, locale: strin
     }
 }
 
-function getFirstLocaleValue<T>(item: LocaleItem<T>): T | undefined {
+function getFirstLocaleValue<T>(item: TranslatableItem<T>): T | undefined {
     const firstKey = Object.keys(item.locales)[0];
     return item.locales[firstKey];
 }
 
-export type LocalValue = any | LocalFunction;
-export type LocalFunction = (...args: any[]) => any;
-
-type Locales<T extends LocalValue = LocalValue> = Record<string, T> & {
+type LocaleValues<T> = Record<string, T> & {
     fallback?: T;
 };
 
-export class LocaleItem<T extends LocalValue = LocalValue> {
-    public readonly locales: Locales;
+export class TranslatableItem<T> {
+    public readonly locales: LocaleValues<T>;
 
-    constructor(locales: Locales) {
+    constructor(locales: LocaleValues<T>) {
         this.locales = shallowReactive(locales);
     }
 
-    patch(other: LocaleItem<T>): void {
+    patch(other: TranslatableItem<T>): void {
         Object.assign(this.locales, other.locales);
     }
 
-    // Skip reactivity for item, because we don't want the values to become reactive.
     get __v_skip(): boolean {
+        // Skip reactivity for item, because we don't want the values to become reactive.
         return true;
     }
 }
@@ -68,6 +67,6 @@ export class LocaleItem<T extends LocalValue = LocalValue> {
  * Creates an Item for the specified ItemLocales.
  * Notice that this only ensures that the typescript type is correct.
  */
-export function l<T extends LocalValue = LocalValue>(locales: Locales<T>): LocaleItem<T> {
-    return new LocaleItem<T>(locales);
+export function l<T>(locales: LocaleValues<T>): TranslatableItem<T> {
+    return new TranslatableItem<T>(locales);
 }

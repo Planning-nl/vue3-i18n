@@ -1,12 +1,14 @@
-import { LocaleItem, t } from "./Localizer";
+import { TranslatableItem, t, Translations } from "./translation";
 
 export type Translator<T extends Translations> = {
-    readonly [P in keyof T]: T[P] extends LocaleItem<infer U> ? U : T[P] extends Translations ? Translator<T[P]> : T[P];
+    readonly [P in keyof T]: T[P] extends TranslatableItem<infer U>
+        ? U
+        : T[P] extends Translations
+        ? Translator<T[P]>
+        : T[P];
 } & { readonly _raw: T };
 
 export type TranslationKeys<T extends Translator<any>> = Exclude<keyof T, "_raw">;
-
-export type Translations = { [key: string]: LocaleItem<any> | Translations };
 
 export function i18n<T extends Translations>(object: T): Translator<T> {
     return new Proxy(object, translatorProxyHandlers);
@@ -22,7 +24,7 @@ const translatorProxyHandlers: ProxyHandler<any> = {
                 return target;
             }
             if (typeof res === "object") {
-                if (res instanceof LocaleItem) {
+                if (res instanceof TranslatableItem) {
                     return t(res);
                 } else {
                     return i18n(res);

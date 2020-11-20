@@ -1,5 +1,5 @@
-import { LocaleItem } from "./Localizer";
-import { Translations, Translator } from "./Translator";
+import { TranslatableItem, Translations } from "./translation";
+import { Translator } from "./translator";
 import { getPrimaryLocale, withLocales } from "./locales";
 
 export function patchLocale<T extends Translations>(
@@ -18,11 +18,11 @@ function patchLocaleData<T extends Translations>(item: T, patches: PatchLocaleOb
             const itemValue = item[key as keyof T];
             if (itemValue === undefined) {
                 // New key.
-                const localeItem = new LocaleItem({});
+                const localeItem = new TranslatableItem({});
                 localeItem.locales[getPrimaryLocale()] = value;
                 item[key as keyof T] = localeItem as any;
             } else if (typeof itemValue === "object") {
-                if (itemValue instanceof LocaleItem) {
+                if (itemValue instanceof TranslatableItem) {
                     itemValue.locales[getPrimaryLocale()] = value;
                 } else {
                     patchLocaleData(itemValue as Translations, value as any);
@@ -35,5 +35,5 @@ function patchLocaleData<T extends Translations>(item: T, patches: PatchLocaleOb
 export type PatchLocaleObject<T extends Translations> = {
     [P in keyof T]:
         | undefined
-        | (T[P] extends LocaleItem<infer LI> ? LI : T[P] extends Translations ? PatchLocaleObject<T[P]> : never);
+        | (T[P] extends TranslatableItem<infer LI> ? LI : T[P] extends Translations ? PatchLocaleObject<T[P]> : never);
 };

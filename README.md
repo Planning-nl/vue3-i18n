@@ -259,7 +259,10 @@ The `number` function accepts a number and additional [Intl.NumberFormatOptions]
 console.log(number(10, { style: 'currency', currency: 'EUR' }));
 ```
 
-The `numberParts` function will return the result in a `Intl.NumberFormatPart` array.
+The `numberParts` returns the result in a `Intl.NumberFormatPart` array.
+
+The `numberHtml` returns the result in a HTML string with CSS classes. It can be used in a `v-html` property. This allows adding CSS 
+styles.
  
 ### Datetime
 
@@ -287,6 +290,8 @@ console.log(datetime(new Date(), "custom", { weekday: "long" }));
 ```
 
 The `datetimeParts` function will return the result in a `Intl.DateTimeFormatPart` array.
+
+The `datetimeHtml` returns the result in a HTML string with CSS classes. It can be used in a `v-html` property. 
 
 ## i18n for generic components
 

@@ -1,4 +1,4 @@
-import { dateTimeFormats, datetime, datetimeParts } from "./datetime";
+import { dateTimeFormats, datetime, datetimeHtml, datetimeParts } from "./datetime";
 import { locales } from "../locales";
 import { patch } from "../patch";
 import { l } from "../translation";
@@ -59,5 +59,12 @@ describe("formatDate", () => {
             { type: "literal", value: "/" },
             { type: "year", value: "2020" },
         ]);
+    });
+
+    test("datetimeHtml", () => {
+        const d = new Date(2020, 10, 20, 12, 41, 10);
+        expect(datetimeHtml(d, "long")).toBe(
+            `<span class="i18n-datetime"><span class="i18n-datetime-month">11</span><span class="i18n-datetime-literal">/</span><span class="i18n-datetime-day">20</span><span class="i18n-datetime-literal">/</span><span class="i18n-datetime-year">2020</span></span>`,
+        );
     });
 });

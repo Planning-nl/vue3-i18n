@@ -31,14 +31,13 @@ import { l, i18n, locale } from "@planning.nl/vue3-i18n";
 export default defineComponent({
     setup() {
         return {
-            locale,
             t: i18n({
                 hello: l({
                     en: "hello",
                     nl: "hallo",
                     fallback: "👋",
                 })
-            })
+            }),
         }
     }
 })
@@ -52,8 +51,6 @@ export default defineComponent({
 
 > Notice that you shouldn't *spread* your i18n proxy in the setup (`{...i18n({..})`) 
 > If it contains translatable items on the root level, those will only be translated once initially.
-
-You could also define shared translations:
 
 ```typescript
 import { l, i18n, locale } from "@planning.nl/vue3-i18n";
@@ -87,7 +84,8 @@ console.log(`${t.hello} ${t.group.world}`); // "👋 🌐"
 The `i18n` does all the translation magic and produces a *translator*. It expects a nested object that contains all your 
 translations. This entries in this object should either be plain objects (translation groups) or translatable items.
 
-Translatable items can be created using the `l` function. It accepts a plain object with translations, keyed by locales. 
+Translatable items can be created using the `l` function. It accepts a plain object with translations, keyed by locales.
+The translations can be of any type, not just strings. This gives this library a lot of flexibility. 
  
 ```typescript
 import { l, i18n } from "@planning.nl/vue3-i18n";
@@ -203,8 +201,6 @@ This library doesn't post-process strings at all, and it doesn't have any such p
 as they provide flexibility as well as type safety:
 
 ```typescript
-import { l, i18n } from "@planning.nl/vue3-i18n";
-
 const t = i18n({
     dear: l({ en: "dear", nl: "beste" }),
     greetings: l({
@@ -292,6 +288,64 @@ console.log(datetime(new Date(), "custom", { weekday: "long" }));
 The `datetimeParts` function will return the result in a `Intl.DateTimeFormatPart` array.
 
 The `datetimeHtml` returns the result in a HTML string with CSS classes. It can be used in a `v-html` property. 
+
+### HTML
+
+Sometimes you prefer to translate into HTML code rather than pure strings. You could use `v-html` to use this in your 
+Vue templates. 
+
+When you have a (translation) function that produces HTML, you may want to [insert some 'plain' strings](#String format patterns).
+This module provides `escapeHTML` to safely escape a plain string for usage in a HTML formatted string.
+
+```typescript
+const t = i18n({
+    dear: l({ en: "dear", nl: "beste" }),
+    greetings: l({
+        en: (name: string) => `Hello ${escapeHtml(t.dear)} <strong>${escapeHtml(name)}<strong>`,
+        nl: (name: string) => `Hallo ${escapeHtml(t.dear)} ${escapeHtml(name)}`,
+    }),
+});
+
+locales.value = ["nl-NL"];
+console.log(t.greetings("Evan")); // "Hallo beste Evan";
+
+locales.value = ["en"];
+console.log(t.greetings("Evan")); // "Hello dear Evan";
+
+```
+
+## `useI18nUtils`
+
+`useI18nUtils()` adds the *number*, *datetime* and *htmlEscape* utilities to your component template:
+
+```typescript
+export default defineComponent({
+    setup() {
+        return {
+            ...useI18nUtils(),
+            t: i18n({
+                hello: l({
+                    en: "hello",
+                    nl: "hallo",
+                    fallback: "👋",
+                }),
+                its: l({
+                    en: "it's",
+                    nl: "het is"
+                })
+            }),
+            visits: ref(4325235),
+        }
+    }
+})
+```
+
+```html
+<template>
+    <p><strong v-text="t.hello"></strong>, {{ t.its }} {{ datetime(new Date(), "long") }}</p>
+    <p v-html="numberHtml(visits)"></p>
+</template>
+```
 
 ## i18n for generic components
 

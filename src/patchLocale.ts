@@ -15,14 +15,14 @@ export function patchLocale<T extends Translations>(
 export function patchLocalePartial<T extends Translations>(
     item: Translator<T>,
     locale: string | undefined,
-    patches: Partial<PatchLocaleObject<T>>,
+    patches: PartialPatchLocaleObject<T>,
 ): void {
     withLocales([locale || getPrimaryLocale()], () => {
         patchLocaleData(item._raw, patches);
     });
 }
 
-function patchLocaleData<T extends Translations>(item: T, patches: Partial<PatchLocaleObject<T>>): void {
+function patchLocaleData<T extends Translations>(item: T, patches: PartialPatchLocaleObject<T>): void {
     for (const [key, newValue] of Object.entries(patches)) {
         if (newValue !== undefined) {
             const currValue = item[key as keyof T];
@@ -41,6 +41,14 @@ function patchLocaleData<T extends Translations>(item: T, patches: Partial<Patch
         }
     }
 }
+
+export type PartialPatchLocaleObject<T extends Translations> = {
+    [P in keyof T]?: T[P] extends TranslatableItem<infer LI>
+        ? LI
+        : T[P] extends Translations
+        ? PartialPatchLocaleObject<T[P]>
+        : never;
+};
 
 export type PatchLocaleObject<T extends Translations> = {
     [P in keyof T]:

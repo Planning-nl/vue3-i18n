@@ -1,10 +1,10 @@
-import { useI18n } from "../translator";
+import { translate } from "../translator";
 import { l } from "../translation";
 import { plural, pluralAmount } from "./plural";
 
 describe("plural", () => {
     test("simple", () => {
-        const t = useI18n({
+        const t = translate({
             banana: l({
                 en: plural("banana", "bananas"),
             }),
@@ -15,7 +15,7 @@ describe("plural", () => {
     });
 
     test("amount", () => {
-        const t = useI18n({
+        const t = translate({
             bananas: l({
                 en: pluralAmount("no bananas", "one banana", "{n} bananas"),
             }),

@@ -1,4 +1,4 @@
-import { useI18n } from "../translator";
+import { translate } from "../translator";
 import { l, TranslatableItem } from "../translation";
 import { getLocales } from "../locales";
 
@@ -7,7 +7,7 @@ type NewDateTimeFormatOptions = Intl.DateTimeFormatOptions & {
     timeStyle?: string;
 };
 
-export const dateTimeFormats = useI18n<Record<string, TranslatableItem<NewDateTimeFormatOptions>>>({
+export const dateTimeFormats = translate<Record<string, TranslatableItem<NewDateTimeFormatOptions>>>({
     full: l({ fallback: { dateStyle: "full" } }),
     long: l({ fallback: { dateStyle: "long" } }),
     medium: l({ fallback: { dateStyle: "medium" } }),

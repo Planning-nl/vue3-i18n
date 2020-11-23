@@ -1,4 +1,4 @@
-import { TranslatableItem, Translations } from "./translation";
+import { l, TranslatableItem, Translations } from "./translation";
 import { Translator } from "./translator";
 import { getPrimaryLocale, withLocales } from "./locales";
 

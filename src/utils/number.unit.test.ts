@@ -21,7 +21,7 @@ describe("number", () => {
         ]);
     });
 
-    test("patch", () => {
+    test("customize", () => {
         locales.value = ["nl-NL"];
 
         patchLocalePartial(i18n, "nl-NL", {

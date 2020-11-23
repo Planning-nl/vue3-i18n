@@ -1,8 +1,8 @@
 import { dateTimeFormats, datetime, datetimeParts } from "./datetime";
-import { locales } from "../locales";
+import { locales, withLocales } from "../locales";
 import { patch } from "../patch";
 import { l } from "../translation";
-import { patchLocale } from "../patchLocale";
+import { patchLocale, patchLocalePartial } from "../patchLocale";
 import { i18n } from "./index";
 
 describe("formatDate", () => {
@@ -60,5 +60,18 @@ describe("formatDate", () => {
             { type: "literal", value: ", " },
             { type: "year", value: "2020" },
         ]);
+    });
+
+    test("customize", () => {
+        const prev = withLocales(["nl"], () => i18n.datetime);
+        patchLocalePartial(i18n, "nl", {
+            datetime: (d, m, e) => {
+                return `[${prev(d, m, e)}]`;
+            },
+        });
+
+        locales.value = ["nl"];
+        const d = new Date(2020, 10, 20, 12, 41, 10);
+        expect(i18n.datetime(d, "full")).toBe("[vrijdag 20 november 2020]");
     });
 });

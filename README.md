@@ -27,11 +27,11 @@ This is a lightweight and type safe i18n library for [Vue 3](https://github.com/
 ## Basic usage
 
 ```typescript
-import { l, i18n, locale } from "@planning.nl/vue3-i18n";
+import { l, translate } from "@planning.nl/vue3-i18n";
 export default defineComponent({
     setup() {
         return {
-            t: i18n({
+            t: translate({
                 hello: l({
                     en: "hello",
                     nl: "hallo",
@@ -49,13 +49,13 @@ export default defineComponent({
 </template>
 ```
 
-> Notice that you shouldn't *spread* your i18n proxy in the setup (`{...i18n({..})`) 
+> Notice that you shouldn't *spread* your translator in the setup (`{...translate(..)}`) 
 > If it contains translatable items on the root level, those will only be translated once initially.
 
 ```typescript
-import { l, i18n, locale } from "@planning.nl/vue3-i18n";
+import { l, translate } from "@planning.nl/vue3-i18n";
 
-export const t = i18n({
+export const t = translate({
     hello: l({
         en: "hello",
         nl: "hallo",
@@ -81,16 +81,17 @@ console.log(`${t.hello} ${t.group.world}`); // "👋 🌐"
 
 ### Translation Set
 
-The `i18n` does all the translation magic and produces a *translator*. It expects a nested object that contains all your 
-translations. This entries in this object should either be plain objects (translation groups) or translatable items.
+The `translate` function does all the translation magic and produces a *translator*. 
+It expects a nested object that contains all your translations. This entries in this object should either be plain 
+objects (translation groups) or translatable items.
 
 Translatable items can be created using the `l` function. It accepts a plain object with translations, keyed by locales.
 The translations can be of any type, not just strings. This gives this library a lot of flexibility. 
  
 ```typescript
-import { l, i18n } from "@planning.nl/vue3-i18n";
+import { l, translate } from "@planning.nl/vue3-i18n";
 
-const translations = i18n({
+const translations = translate({
     hello: l({
         en: "hello",
         "en-US": "hi",
@@ -150,17 +151,17 @@ The `patch` function allows you to conveniently change translations of an existi
 It iterates over both the translations object recursively, and merges the locales for the translatable items.
 
 Using the patch function ensures that all translation items have been specified. If some keys have not been specified a 
-typescript error will occur. This makes sure you didn't forget one. 
+typescript error will occur. This makes sure you didn't forget one.
+
+There are two ways to ignore unspecified properties:
+1. By specifying the property value `undefined`, it will ignore it completely.
+2. By using `patchPartial`, which allows optional keys.
 
 > Although patching is the advised method of changing a translations set, it's also possible to change the translations 
 > object directly. Use the `_raw` property to obtain a reference to it.
 
-There are two ways to ignore unspecified properties: 
-1. By specifying the property value `undefined`, it will ignore it completely.
-2. By overriding the type with any: `patch(Base, obj as any)`.
-
 ```typescript
-const t = i18n({
+const t = translate({
     multi: {
         main: l({
             "de-DE-BY": "Bayern",
@@ -184,7 +185,7 @@ locales.value = ["de-DE-NW"];
 console.log(t.main); // Nordrhein Westfalen
 ```
 
-When changing a single locale, `patchLocale` provides a cleaner syntax:
+When changing a single locale, `patchLocale` (or `patchLocalePartial`) provides a cleaner syntax:
 
 ```typescript
 patchLocale(t, "nl", { 
@@ -201,7 +202,7 @@ This library doesn't post-process strings at all, and it doesn't have any such p
 as they provide flexibility as well as type safety:
 
 ```typescript
-const t = i18n({
+const t = translate({
     dear: l({ en: "dear", nl: "beste" }),
     greetings: l({
         en: (name: string) => `Hello ${t.dear} ${name}`,
@@ -221,20 +222,20 @@ console.log(t.greetings("Evan")); // "Hello dear Evan";
 Most used languages have the same basic pluralization rules. Nouns come in two forms: singular and plural nouns.
 
 This modules ships with some helper functions specifically for this pluralization rule:
-* `i18n.plural` defines nouns with a singular and plural form
-* `i18n.pluralAmount` defines nouns along with an 'amount' quantifier
+* `plural` defines nouns with a singular and plural form
+* `pluralAmount` defines nouns along with an 'amount' quantifier
 
 Both produce a `(n?: number) => string` converter which can be used directly from the translator.
 
 > You can also patch these utility functions to extend them for languages that don't follow these patterns.
 
 ```typescript
-const t = i18n({
+const t = translate({
     banana: l({
-        en: i18n.plural("banana", "bananas"),
+        en: plural("banana", "bananas"),
     }),
     cost: l({
-        en: i18n.pluralAmount("free", "one euro", "{n} euros"),
+        en: pluralAmount("free", "one euro", "{n} euros"),
     }),
 });
 
@@ -290,6 +291,32 @@ The `i18n.datetimeParts` function will return the result in a `Intl.DateTimeForm
 
 > You can also patch these utility functions to extend them for languages that don't follow these patterns.
 
+
+### Ucfirst
+
+The `ucfirst` function accepts a string and returns the same string with the first character capitalized.
+
+## Utility localization
+
+The `number`, `numberParts`, `datetime`, `datetimeParts` and `ucfirst` utility functions can be localized. 
+
+Imagine that you're not happy with the Intl functionality (or it isn't supported), then you can provide your own 
+implementation for a specific locale:
+
+```typescript
+patchLocalePartial(i18n, "nl-NL", {
+    number: (v, options) => {
+        return `number[${v}]`;
+    },
+    datetime: (d, m, e) => {
+        return `[${prev(d, m, e)}]`;
+    },
+    ucfirst: (v) => {
+        return 'something else'
+    }
+});
+```
+
 ## i18n for generic components
 
 This lightweight module is perfect for providing i18n in generic component modules.
@@ -309,10 +336,10 @@ will receive a typescript error which forces them to provide translations for th
 
 ### Reactive translation objects
 If you have a dynmically changing translations object and need it to be reactive, wrap the object into `reactive` before 
-passing it to `i18n`:
+passing it to `translate`:
 
 ```typescript
-const reactiveTranslations = i18n(reactive({} as any));
+const reactiveTranslations = translate(reactive({} as any));
 console.log(reactiveTranslations.dynamic?.prop); // undefined
 reactiveTranslations._raw.dynamic = { prop: l({ en: "hello", nl: "hallo" }) };
 console.log(reactiveTranslations.dynamic?.prop); // "hello"

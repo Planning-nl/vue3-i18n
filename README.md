@@ -291,30 +291,11 @@ The `i18n.datetimeParts` function will return the result in a `Intl.DateTimeForm
 
 > You can also patch these utility functions to extend them for languages that don't follow these patterns.
 
-
 ### Ucfirst
 
-The `ucfirst` function accepts a string and returns the same string with the first character capitalized.
-
-## Utility localization
-
-The `number`, `numberParts`, `datetime`, `datetimeParts` and `ucfirst` utility functions can be localized. 
-
-Imagine that you're not happy with the Intl functionality (or it isn't supported), then you can provide your own 
-implementation for a specific locale:
-
+The `ucfirst` function accepts a string and returns the same string with the first character capitalized:
 ```typescript
-patchLocalePartial(i18n, "nl-NL", {
-    number: (v, options) => {
-        return `number[${v}]`;
-    },
-    datetime: (d, m, e) => {
-        return `[${prev(d, m, e)}]`;
-    },
-    ucfirst: (v) => {
-        return 'something else'
-    }
-});
+console.log(i18n.ucfirst("hello"));
 ```
 
 ## i18n for generic components
@@ -354,6 +335,27 @@ When you'd like to get the translatable keys (type) of a translator object, be a
 This is probably not what you want. 
 
 You can can use `keyof typeof translations["_raw"]` to get to the 'real' keys.
+
+### Utility localization
+
+The `number`, `numberParts`, `datetime`, `datetimeParts` and `ucfirst` utility functions can be localized. 
+
+Imagine that you're not happy with the Intl functionality (or it isn't supported), then you can provide your own 
+implementation for a specific locale:
+
+```typescript
+patchLocalePartial(i18n, "nl-NL", {
+    number: (v, options) => {
+        return `number[${v}]`;
+    },
+    datetime: (d, m, e) => {
+        return `[${prev(d, m, e)}]`;
+    },
+    ucfirst: (v) => {
+        return 'something else'
+    }
+});
+```
 
 ## Browser support
 

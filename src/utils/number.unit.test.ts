@@ -1,17 +1,17 @@
 import { locales } from "../locales";
-import { i18n } from "./index";
+import { number, numberParts } from "./number";
 
 describe("number", () => {
     test("simple", () => {
         locales.value = ["nl-NL"];
         const v = 99999.123;
-        expect(i18n.number(v)).toBe("99.999,123");
+        expect(number(v)).toBe("99.999,123");
     });
 
     test("parts", () => {
         locales.value = ["nl-NL"];
         const v = 99999.123;
-        expect(i18n.numberParts(v)).toEqual([
+        expect(numberParts(v)).toEqual([
             { type: "integer", value: "99" },
             { type: "group", value: "." },
             { type: "integer", value: "999" },

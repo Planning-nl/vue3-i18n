@@ -5,7 +5,11 @@ export function patch<T extends Translations>(item: Translator<T>, patches: Patc
     patchData(item._raw, patches);
 }
 
-function patchData<T extends Translations>(item: T, patches: PatchObject<T>): void {
+export function patchPartial<T extends Translations>(item: Translator<T>, patches: Partial<PatchObject<T>>): void {
+    patchData(item._raw, patches);
+}
+
+function patchData<T extends Translations>(item: T, patches: Partial<PatchObject<T>>): void {
     for (const [key, newValue] of Object.entries(patches)) {
         if (newValue !== undefined) {
             const currValue = item[key as keyof T];
@@ -33,9 +37,11 @@ function patchData<T extends Translations>(item: T, patches: PatchObject<T>): vo
 }
 
 export type PatchObject<T extends Translations> = {
-    [P in keyof T]?: T[P] extends TranslatableItem<infer LI>
-        ? TranslatableItem<LI | undefined>
-        : T[P] extends Translations
-        ? PatchObject<T[P]>
-        : never;
+    [P in keyof T]:
+        | undefined
+        | (T[P] extends TranslatableItem<infer LI>
+              ? TranslatableItem<LI | undefined>
+              : T[P] extends Translations
+              ? PatchObject<T[P]>
+              : never);
 };

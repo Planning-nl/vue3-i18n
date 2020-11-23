@@ -1,6 +1,6 @@
 import { useI18n } from "./translator";
 import { l, TranslatableItem } from "./translation";
-import { patchLocale } from "./patchLocale";
+import { patchLocale, patchLocalePartial } from "./patchLocale";
 import { locales, withLocales } from "./locales";
 
 describe("patchLocale", () => {
@@ -49,5 +49,23 @@ describe("patchLocale", () => {
         });
 
         expect(withLocales(["it"], () => T.main)).toBe("other");
+    });
+
+    test("partial", () => {
+        const T = useI18n({
+            one: l({
+                "de-DE": "Deutsch",
+            }),
+            two: l({
+                "de-DE": "Deutsch",
+            }),
+        });
+
+        patchLocalePartial(T, "fallback", {
+            one: "other",
+        });
+
+        expect(withLocales(["it"], () => T.one)).toBe("other");
+        expect(withLocales(["it"], () => T.two)).toBe("Deutsch");
     });
 });

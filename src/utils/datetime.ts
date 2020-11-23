@@ -25,18 +25,14 @@ function getDateTimeFormat(mode: Mode, extraOptions: NewDateTimeFormatOptions = 
     return Intl.DateTimeFormat(getLocales() as string[], options);
 }
 
-export const datetime = l({
-    fallback: (date: Date, mode: Mode, extraOptions: NewDateTimeFormatOptions = {}): string => {
-        return getDateTimeFormat(mode, extraOptions).format(date);
-    },
-});
+export function datetime(date: Date, mode: Mode, extraOptions: NewDateTimeFormatOptions = {}): string {
+    return getDateTimeFormat(mode, extraOptions).format(date);
+}
 
-export const datetimeParts = l({
-    fallback: (
-        date: Date,
-        mode: "full" | "long" | "medium" | "short" | string,
-        extraOptions: NewDateTimeFormatOptions = {},
-    ): Intl.DateTimeFormatPart[] => {
-        return getDateTimeFormat(mode, extraOptions).formatToParts(date);
-    },
-});
+export function datetimeParts(
+    date: Date,
+    mode: "full" | "long" | "medium" | "short" | string,
+    extraOptions: NewDateTimeFormatOptions = {},
+): Intl.DateTimeFormatPart[] {
+    return getDateTimeFormat(mode, extraOptions).formatToParts(date);
+}

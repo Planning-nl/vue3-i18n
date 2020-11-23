@@ -1,7 +1,7 @@
 import { useI18n } from "./translator";
 import { l } from "./translation";
 import { locales, withLocales } from "./locales";
-import { patch } from "./patch";
+import { patch, patchPartial } from "./patch";
 
 describe("patch", () => {
     test("basic", () => {
@@ -93,13 +93,11 @@ describe("patch", () => {
         expect(T.hello).toBe("Hallo");
         expect(T.multi.sub).toBe("Nederlands");
 
-        patch(T, {
+        patchPartial(T, {
             main: l({
                 nl: "Nederlands 2",
                 "de-DE-NW": "Nordrhein Westfalen",
             }),
-            hello: undefined,
-            multi: undefined,
         });
 
         expect(T.main).toBe("Nederlands 2");

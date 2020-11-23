@@ -12,7 +12,17 @@ export function patchLocale<T extends Translations>(
     });
 }
 
-function patchLocaleData<T extends Translations>(item: T, patches: PatchLocaleObject<T>): void {
+export function patchLocalePartial<T extends Translations>(
+    item: Translator<T>,
+    locale: string | undefined,
+    patches: Partial<PatchLocaleObject<T>>,
+): void {
+    withLocales([locale || getPrimaryLocale()], () => {
+        patchLocaleData(item._raw, patches);
+    });
+}
+
+function patchLocaleData<T extends Translations>(item: T, patches: Partial<PatchLocaleObject<T>>): void {
     for (const [key, newValue] of Object.entries(patches)) {
         if (newValue !== undefined) {
             const currValue = item[key as keyof T];
@@ -33,9 +43,7 @@ function patchLocaleData<T extends Translations>(item: T, patches: PatchLocaleOb
 }
 
 export type PatchLocaleObject<T extends Translations> = {
-    [P in keyof T]?: T[P] extends TranslatableItem<infer LI>
-        ? LI
-        : T[P] extends Translations
-        ? PatchLocaleObject<T[P]>
-        : never;
+    [P in keyof T]:
+        | undefined
+        | (T[P] extends TranslatableItem<infer LI> ? LI : T[P] extends Translations ? PatchLocaleObject<T[P]> : never);
 };

@@ -5,5 +5,6 @@ export { getLocales, locales, withLocales } from "./locales";
 export { patch } from "./patch";
 export { patchLocale } from "./patchLocale";
 
-export { useI18nUtils } from "./utils";
+export { i18n } from "./utils";
 export { dateTimeFormats } from "./utils/datetime";
+export { plural, pluralAmount } from "./utils/plural";

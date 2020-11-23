@@ -1,11 +1,10 @@
 import { ref } from "@vue/reactivity";
 
 export const locales = ref<string[] | undefined>();
-let forceLocales: string[] | undefined;
+export const forceLocales = ref<string[] | undefined>();
 
 export function getLocales(): Readonly<string[]> {
-    if (forceLocales) return forceLocales;
-    return locales.value ?? navigator.languages;
+    return forceLocales.value ?? locales.value ?? navigator.languages;
 }
 
 export function getPrimaryLocale(): string {
@@ -18,12 +17,12 @@ export function getPrimaryLocale(): string {
  * Example usage: `const c = withLocale(["en-GB"], () => local(LocalizationSettings.currency))` ('GBP')
  */
 export function withLocales<T>(locales: string[], callback: () => T): T {
-    forceLocales = locales;
+    forceLocales.value = locales;
     let result: T;
     try {
         result = callback();
     } finally {
-        forceLocales = undefined;
+        forceLocales.value = undefined;
     }
     return result;
 }

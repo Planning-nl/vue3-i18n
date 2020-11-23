@@ -1,4 +1,4 @@
-import { number } from "./number";
+import { i18n } from "./index";
 
 type Pluralizer = (n?: number) => string;
 
@@ -19,7 +19,7 @@ export function pluralAmount(none: string, one: string, multiple: string): Plura
         } else if (n === 1) {
             return one;
         } else {
-            return multiple.replace("{n}", number(n));
+            return multiple.replace("{n}", i18n.number(n));
         }
     };
 }

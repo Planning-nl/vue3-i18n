@@ -7,4 +7,4 @@ export { patchLocale, patchLocalePartial } from "./patchLocale";
 
 export { i18n } from "./utils";
 export { dateTimeFormats } from "./utils/datetime";
-export { plural, pluralAmount } from "./utils/plural";
+export { plural, pluralAmount, Pluralizer } from "./utils/plural";

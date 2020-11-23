@@ -1,6 +1,6 @@
 import { i18n } from "./index";
 
-type Pluralizer = (n?: number) => string;
+export type Pluralizer = (n?: number) => string;
 
 export function plural(singular: string, plural: string): Pluralizer {
     return (n = 1): string => {

@@ -1,7 +1,7 @@
 {
     "name": "@planning.nl/vue3-i18n",
     "description": "This module offers lightweight and type safe i18n for Vue 3",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "author": "Planning.nl, Bas van Meurs, Robbin Baauw",
     "bugs": {
         "url": "https://github.com/Planning-nl/i18n/issues",

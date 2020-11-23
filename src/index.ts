@@ -1,5 +1,5 @@
 export { translate, Translator } from "./translator";
-export { l, t, Translations } from "./translation";
+export { l, t, Translations, TranslatableItem, LocaleValues } from "./translation";
 export { getLocales, locales, withLocales } from "./locales";
 
 export { patch, patchPartial } from "./patch";

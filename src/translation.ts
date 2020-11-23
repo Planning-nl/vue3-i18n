@@ -42,7 +42,7 @@ function getFirstLocaleValue<T>(item: TranslatableItem<T>): T | undefined {
     return item.locales[firstKey];
 }
 
-type LocaleValues<T> = Record<string, T> & {
+export type LocaleValues<T> = Record<string, T> & {
     fallback?: T;
 };
 

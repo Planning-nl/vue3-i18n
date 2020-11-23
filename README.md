@@ -247,6 +247,14 @@ console.log(t.cost(10.55)); // 10.55 euros
 > You may prefer another method of pluralization, or you may need another plural rules for a specific locale. In that 
 > case you can add and use your own pluralization functions.
 
+## i18n utils
+
+The `i18n` object contains some locale-aware formatting functions. You can supply them in the setup function of a 
+component and use them in your template.
+
+> Include the full object in your setup return value, and **don't spread it**. When spreading, the utility functions 
+> will lose their locale awareness.
+
 ### Number
 
 You can use the `i18n.number` function to format a number. This library relies on the `Intl.NumberFormat` browser 

@@ -1,44 +1,42 @@
-import { i18n } from "../translator";
+import { useI18n } from "../translator";
 import { l, TranslatableItem } from "../translation";
 import { getLocales } from "../locales";
-import { escapeHtml } from "./escapeHtml";
 
-export const dateTimeFormats = i18n({
-    full: l({ fallback: { datestyle: "full" } }),
-    long: l({ fallback: { datestyle: "long" } }),
-    medium: l({ fallback: { datestyle: "medium" } }),
-    short: l({ fallback: { datestyle: "short" } }),
-} as Record<string, TranslatableItem<Intl.DateTimeFormatOptions>>);
+type NewDateTimeFormatOptions = Intl.DateTimeFormatOptions & {
+    dateStyle?: string;
+    timeStyle?: string;
+};
+
+export const dateTimeFormats = useI18n<Record<string, TranslatableItem<NewDateTimeFormatOptions>>>({
+    full: l({ fallback: { dateStyle: "full" } }),
+    long: l({ fallback: { dateStyle: "long" } }),
+    medium: l({ fallback: { dateStyle: "medium" } }),
+    short: l({ fallback: { dateStyle: "short" } }),
+});
 
 type Mode = "full" | "long" | "medium" | "short" | string;
 
-export function getDateTimeFormat(mode: Mode, extraOptions: Intl.DateTimeFormatOptions = {}) {
-    const baseOptions = dateTimeFormats[mode] || {};
-    let options;
+function getDateTimeFormat(mode: Mode, extraOptions: NewDateTimeFormatOptions = {}) {
+    let options = dateTimeFormats[mode] || {};
     if (extraOptions) {
-        options = Object.assign({}, baseOptions, extraOptions);
-    } else {
-        options = baseOptions;
+        options = Object.assign({}, options, extraOptions);
     }
+
     return Intl.DateTimeFormat(getLocales() as string[], options);
 }
 
-export function datetime(date: Date, mode: Mode, extraOptions: Intl.DateTimeFormatOptions = {}): string {
-    return getDateTimeFormat(mode, extraOptions).format(date);
-}
+export const datetime = l({
+    fallback: (date: Date, mode: Mode, extraOptions: NewDateTimeFormatOptions = {}): string => {
+        return getDateTimeFormat(mode, extraOptions).format(date);
+    },
+});
 
-export function datetimeParts(
-    date: Date,
-    mode: "full" | "long" | "medium" | "short" | string,
-    extraOptions: Intl.DateTimeFormatOptions = {},
-): Intl.DateTimeFormatPart[] {
-    return getDateTimeFormat(mode, extraOptions).formatToParts(date);
-}
-
-export function datetimeHtml(date: Date, mode: Mode, extraOptions: Intl.DateTimeFormatOptions = {}): string {
-    const parts = datetimeParts(date, mode, extraOptions);
-    const partsHtml = parts
-        .map((part) => `<span class="i18n-datetime-${part.type}">${escapeHtml(part.value)}</span>`)
-        .join("");
-    return `<span class="i18n-datetime">${partsHtml}</span>`;
-}
+export const datetimeParts = l({
+    fallback: (
+        date: Date,
+        mode: "full" | "long" | "medium" | "short" | string,
+        extraOptions: NewDateTimeFormatOptions = {},
+    ): Intl.DateTimeFormatPart[] => {
+        return getDateTimeFormat(mode, extraOptions).formatToParts(date);
+    },
+});

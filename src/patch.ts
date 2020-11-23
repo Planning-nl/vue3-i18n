@@ -6,26 +6,26 @@ export function patch<T extends Translations>(item: Translator<T>, patches: Patc
 }
 
 function patchData<T extends Translations>(item: T, patches: PatchObject<T>): void {
-    for (const [key, value] of Object.entries(patches)) {
-        if (value !== undefined) {
-            const itemValue = item[key as keyof T];
-            if (itemValue === undefined) {
+    for (const [key, newValue] of Object.entries(patches)) {
+        if (newValue !== undefined) {
+            const currValue = item[key as keyof T];
+            if (currValue === undefined) {
                 // New key.
-                if (typeof value === "object") {
-                    if (value instanceof TranslatableItem) {
-                        item[key as keyof T] = value as any;
+                if (typeof newValue === "object") {
+                    if (newValue instanceof TranslatableItem) {
+                        item[key as keyof T] = newValue as any;
                     } else {
                         item[key as keyof T] = {} as any;
-                        patchData(item[key as keyof T] as Translations, value);
+                        patchData(item[key as keyof T] as Translations, newValue);
                     }
                 }
-            } else if (typeof itemValue === "object") {
-                if (itemValue instanceof TranslatableItem) {
-                    if (value instanceof TranslatableItem) {
-                        itemValue.patch(value as TranslatableItem<T>);
+            } else if (typeof currValue === "object") {
+                if (currValue instanceof TranslatableItem) {
+                    if (newValue instanceof TranslatableItem) {
+                        currValue.patch(newValue as TranslatableItem<T>);
                     }
                 } else {
-                    patchData(itemValue as Translations, value as any);
+                    patchData(currValue as Translations, newValue as any);
                 }
             }
         }
@@ -33,11 +33,9 @@ function patchData<T extends Translations>(item: T, patches: PatchObject<T>): vo
 }
 
 export type PatchObject<T extends Translations> = {
-    [P in keyof T]:
-        | undefined
-        | (T[P] extends TranslatableItem<infer LI>
-              ? TranslatableItem<LI | undefined>
-              : T[P] extends Translations
-              ? PatchObject<T[P]>
-              : never);
+    [P in keyof T]?: T[P] extends TranslatableItem<infer LI>
+        ? TranslatableItem<LI | undefined>
+        : T[P] extends Translations
+        ? PatchObject<T[P]>
+        : never;
 };

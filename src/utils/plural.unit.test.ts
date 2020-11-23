@@ -1,12 +1,14 @@
-import { i18n } from "../translator";
+import { useI18n } from "../translator";
 import { l } from "../translation";
-import { plural, pluralAmount } from "./plural";
+import { i18n } from "./index";
+import { patchLocale } from "../patchLocale";
+import { locales } from "../locales";
 
 describe("plural", () => {
     test("simple", () => {
-        const t = i18n({
+        const t = useI18n({
             banana: l({
-                en: plural("banana", "bananas"),
+                en: i18n.plural("banana", "bananas"),
             }),
         });
 
@@ -15,14 +17,27 @@ describe("plural", () => {
     });
 
     test("amount", () => {
-        const t = i18n({
+        const t = useI18n({
             bananas: l({
-                en: pluralAmount("no bananas", "one banana", "{n} bananas"),
+                en: i18n.pluralAmount("no bananas", "one banana", "{n} bananas"),
             }),
         });
 
         expect(t.bananas(0)).toBe("no bananas");
         expect(t.bananas(1)).toBe("one banana");
         expect(t.bananas(10)).toBe("10 bananas");
+    });
+
+    test("patching", () => {
+        patchLocale(i18n, "nl", {
+            plural: (singular, plural) => {
+                return (n) => {
+                    return `${n} ${plural}`;
+                };
+            },
+        });
+
+        locales.value = ["nl"];
+        expect(i18n.plural("a", "b")(0)).toBe("0 b");
     });
 });

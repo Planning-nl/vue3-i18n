@@ -1,11 +1,11 @@
-import { i18n } from "./translator";
+import { useI18n } from "./translator";
 import { l, TranslatableItem } from "./translation";
 import { patchLocale } from "./patchLocale";
 import { locales, withLocales } from "./locales";
 
 describe("patchLocale", () => {
     test("basic", () => {
-        const T = i18n({
+        const T = useI18n({
             hello: l({} as TranslatableItem<string>),
             sub: {
                 world: l({} as TranslatableItem<string>),
@@ -24,7 +24,7 @@ describe("patchLocale", () => {
     });
 
     test("add key", () => {
-        const T = i18n({
+        const T = useI18n({
             main: l({
                 "de-DE": "Deutsch",
             }),
@@ -38,7 +38,7 @@ describe("patchLocale", () => {
     });
 
     test("empty locale patch", () => {
-        const T = i18n({
+        const T = useI18n({
             main: l({
                 "de-DE": "Deutsch",
             }),

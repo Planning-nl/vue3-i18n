@@ -1,6 +1,6 @@
 import { locales } from "./locales";
 import { l, t } from "./translation";
-import { i18n } from "./index";
+import { useI18n } from "./index";
 
 describe("Localizer", () => {
     const L = l({ nl: "nl", "nl-NL": "nl-NL", "de-DE": "de-DE", "de-DE-BY": "de-DE-BY", fallback: "fallback" });
@@ -113,7 +113,7 @@ describe("Localizer", () => {
         });
 
         test("spread", () => {
-            const setupVars = { ...i18n(L) };
+            const setupVars = { ...useI18n(L) };
             expect(setupVars.all).toBe("all");
             expect(setupVars.main.value).toBe("main en");
             locales.value = ["nl"];
@@ -134,7 +134,7 @@ describe("Localizer", () => {
             }),
         };
 
-        const t = i18n(translations);
+        const t = useI18n(translations);
 
         locales.value = ["nl-NL"];
         expect(t.greetings("Evan")).toBe("Hallo beste Evan");

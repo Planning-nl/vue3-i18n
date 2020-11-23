@@ -221,18 +221,20 @@ console.log(t.greetings("Evan")); // "Hello dear Evan";
 Most used languages have the same basic pluralization rules. Nouns come in two forms: singular and plural nouns.
 
 This modules ships with some helper functions specifically for this pluralization rule:
-* `plural` defines nouns with a singular and plural form
-* `amount` defines nouns along with an 'amount' quantifier
+* `i18n.plural` defines nouns with a singular and plural form
+* `i18n.pluralAmount` defines nouns along with an 'amount' quantifier
 
 Both produce a `(n?: number) => string` converter which can be used directly from the translator.
+
+> You can also patch these utility functions to extend them for languages that don't follow these patterns.
 
 ```typescript
 const t = i18n({
     banana: l({
-        en: plural("banana", "bananas"),
+        en: i18n.plural("banana", "bananas"),
     }),
     cost: l({
-        en: amount("free", "one euro", "{n} euros"),
+        en: i18n.pluralAmount("free", "one euro", "{n} euros"),
     }),
 });
 
@@ -246,23 +248,22 @@ console.log(t.cost(10.55)); // 10.55 euros
 
 ### Number
 
-You can use the `number` function to format a number. This library relies on the `Intl.NumberFormat` browser 
+You can use the `i18n.number` function to format a number. This library relies on the `Intl.NumberFormat` browser 
 functionality for locale-aware number formatting.
  
-The `number` function accepts a number and additional [Intl.NumberFormatOptions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat) number format options. 
+The `i18n.number` function accepts a number and additional [Intl.NumberFormatOptions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat) number format options. 
 
 ```typescript
-console.log(number(10, { style: 'currency', currency: 'EUR' }));
+console.log(i18n.number(10, { style: 'currency', currency: 'EUR' }));
 ```
 
-The `numberParts` returns the result in a `Intl.NumberFormatPart` array.
+The `i18n.numberParts` returns the result in a `Intl.NumberFormatPart` array.
 
-The `numberHtml` returns the result in a HTML string with CSS classes. It can be used in a `v-html` property. This allows adding CSS 
-styles.
+> You can also patch these utility functions to extend them for languages that don't follow these patterns.
  
 ### Datetime
 
-You can use the `datetime` function to format a date. This library relies on the `Intl.DateTimeFormat` browser 
+You can use the `i18n.datetime` function to format a date. This library relies on the `Intl.DateTimeFormat` browser 
 functionality.
 
 This module allows a way to override/add custom datetime *formats*:
@@ -285,67 +286,9 @@ console.log(datetime(new Date(), "long"));
 console.log(datetime(new Date(), "custom", { weekday: "long" }));
 ```
 
-The `datetimeParts` function will return the result in a `Intl.DateTimeFormatPart` array.
+The `i18n.datetimeParts` function will return the result in a `Intl.DateTimeFormatPart` array.
 
-The `datetimeHtml` returns the result in a HTML string with CSS classes. It can be used in a `v-html` property. 
-
-### HTML
-
-Sometimes you prefer to translate into HTML code rather than pure strings. You could use `v-html` to use this in your 
-Vue templates. 
-
-When you have a (translation) function that produces HTML, you may want to [insert some 'plain' strings](#String format patterns).
-This module provides `escapeHTML` to safely escape a plain string for usage in a HTML formatted string.
-
-```typescript
-const t = i18n({
-    dear: l({ en: "dear", nl: "beste" }),
-    greetings: l({
-        en: (name: string) => `Hello ${escapeHtml(t.dear)} <strong>${escapeHtml(name)}<strong>`,
-        nl: (name: string) => `Hallo ${escapeHtml(t.dear)} ${escapeHtml(name)}`,
-    }),
-});
-
-locales.value = ["nl-NL"];
-console.log(t.greetings("Evan")); // "Hallo beste Evan";
-
-locales.value = ["en"];
-console.log(t.greetings("Evan")); // "Hello dear Evan";
-
-```
-
-## `useI18nUtils`
-
-`useI18nUtils()` adds the *number*, *datetime* and *htmlEscape* utilities to your component template:
-
-```typescript
-export default defineComponent({
-    setup() {
-        return {
-            ...useI18nUtils(),
-            t: i18n({
-                hello: l({
-                    en: "hello",
-                    nl: "hallo",
-                    fallback: "👋",
-                }),
-                its: l({
-                    en: "it's",
-                    nl: "het is"
-                })
-            }),
-            visits: ref(4325235),
-        }
-    }
-})
-```
-
-```html
-<template>
-    <p><strong v-text="t.hello"></strong>, {{ t.its }} {{ datetime(new Date(), "long") }}</p>
-    <p v-html="numberHtml(visits)"></p>
-</template>
-```
+> You can also patch these utility functions to extend them for languages that don't follow these patterns.
 
 ## i18n for generic components
 

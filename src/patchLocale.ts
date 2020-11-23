@@ -13,19 +13,19 @@ export function patchLocale<T extends Translations>(
 }
 
 function patchLocaleData<T extends Translations>(item: T, patches: PatchLocaleObject<T>): void {
-    for (const [key, value] of Object.entries(patches)) {
-        if (value !== undefined) {
-            const itemValue = item[key as keyof T];
-            if (itemValue === undefined) {
+    for (const [key, newValue] of Object.entries(patches)) {
+        if (newValue !== undefined) {
+            const currValue = item[key as keyof T];
+            if (currValue === undefined) {
                 // New key.
                 const localeItem = new TranslatableItem({});
-                localeItem.locales[getPrimaryLocale()] = value;
+                localeItem.locales[getPrimaryLocale()] = newValue;
                 item[key as keyof T] = localeItem as any;
-            } else if (typeof itemValue === "object") {
-                if (itemValue instanceof TranslatableItem) {
-                    itemValue.locales[getPrimaryLocale()] = value;
+            } else if (typeof currValue === "object") {
+                if (currValue instanceof TranslatableItem) {
+                    currValue.locales[getPrimaryLocale()] = newValue;
                 } else {
-                    patchLocaleData(itemValue as Translations, value as any);
+                    patchLocaleData(currValue as Translations, newValue as any);
                 }
             }
         }
@@ -33,7 +33,9 @@ function patchLocaleData<T extends Translations>(item: T, patches: PatchLocaleOb
 }
 
 export type PatchLocaleObject<T extends Translations> = {
-    [P in keyof T]:
-        | undefined
-        | (T[P] extends TranslatableItem<infer LI> ? LI : T[P] extends Translations ? PatchLocaleObject<T[P]> : never);
+    [P in keyof T]?: T[P] extends TranslatableItem<infer LI>
+        ? LI
+        : T[P] extends Translations
+        ? PatchLocaleObject<T[P]>
+        : never;
 };

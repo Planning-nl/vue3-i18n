@@ -10,13 +10,13 @@ export type Translator<T extends Translations> = {
 
 export type TranslationKeys<T extends Translator<any>> = Exclude<keyof T, "_raw">;
 
-export function i18n<T extends Translations>(object: T): Translator<T> {
-    return new Proxy(object, translatorProxyHandlers);
+export function useI18n<T extends Translations>(object: T): Translator<T> {
+    return new Proxy(object, translatorProxyHandlers) as Translator<T>;
 }
 
 const VUE_INTERNAL_PREFIX = "__";
 
-const translatorProxyHandlers: ProxyHandler<any> = {
+const translatorProxyHandlers: ProxyHandler<Translations> = {
     get(target, key) {
         const res = Reflect.get(target, key);
         if (typeof key === "string") {
@@ -27,11 +27,11 @@ const translatorProxyHandlers: ProxyHandler<any> = {
                 if (res instanceof TranslatableItem) {
                     return t(res);
                 } else {
-                    return i18n(res);
+                    return useI18n(res);
                 }
             } else {
                 if (res === undefined && !key.startsWith(VUE_INTERNAL_PREFIX)) {
-                    console.warn(`Key '${key}' not found!`);
+                    console.warn(`Translation key '${key}' not found!`);
                 }
                 return res;
             }

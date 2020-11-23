@@ -1,11 +1,11 @@
-import { i18n } from "./translator";
+import { useI18n } from "./translator";
 import { l } from "./translation";
 import { locales, withLocales } from "./locales";
 import { patch } from "./patch";
 
 describe("patch", () => {
     test("basic", () => {
-        const T = i18n({
+        const T = useI18n({
             main: l({
                 nl: "Nederlands",
                 "de-DE-BY": "Bayern",
@@ -32,7 +32,7 @@ describe("patch", () => {
     });
 
     test("recursive", () => {
-        const T = i18n({
+        const T = useI18n({
             multi: {
                 sub: l({
                     nl: "Nederlands",
@@ -55,7 +55,7 @@ describe("patch", () => {
     });
 
     test("delete locale", () => {
-        const T = i18n({
+        const T = useI18n({
             main: l({
                 nl: "Nederlands",
                 "de-DE-BY": "Bayern",
@@ -72,7 +72,7 @@ describe("patch", () => {
     test("partial", () => {
         locales.value = ["nl"];
 
-        const T = i18n({
+        const T = useI18n({
             main: l({
                 nl: "Nederlands",
                 fallback: "-",
@@ -110,7 +110,7 @@ describe("patch", () => {
     test("any", () => {
         locales.value = ["nl"];
 
-        const T = i18n({
+        const T = useI18n({
             main: l({
                 nl: "Nederlands",
                 fallback: "-",

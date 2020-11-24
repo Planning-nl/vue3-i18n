@@ -29,31 +29,6 @@ This is a lightweight and type safe i18n library for [Vue 3](https://github.com/
 
 ```typescript
 import { l, translate } from "@planning.nl/vue3-i18n";
-export default defineComponent({
-    setup() {
-        return {
-            t: translate({
-                hello: l({
-                    en: "hello",
-                    nl: "hallo",
-                    fallback: "👋",
-                })
-            }),
-        }
-    }
-})
-```
-
-```html
-<template>
-    <p v-text="t.hello"></p>
-</template>
-```
-
-> You should never *spread* a translator object (`{...translate({})}`) because it is a proxy. 
-
-```typescript
-import { l, translate } from "@planning.nl/vue3-i18n";
 
 export const t = translate({
     hello: l({
@@ -76,6 +51,34 @@ console.log(`${t.hello} ${t.group.world}`); // "hallo wereld"
 locales.value = ["fr"];
 console.log(`${t.hello} ${t.group.world}`); // "👋 🌐"
 ```
+
+Component usage:
+```typescript
+import { l, translate, number } from "@planning.nl/vue3-i18n";
+export default defineComponent({
+    setup() {
+        return {
+            t: translate({
+                hello: l({
+                    en: "hello",
+                    nl: "hallo",
+                    fallback: "👋",
+                })
+            }),
+            number
+        }
+    }
+})
+```
+
+```html
+<template>
+    <p v-text="t.hello"></p>
+    <p>{{ t.hello }} <span>{{ number(10.23) }}</p>
+</template>
+```
+
+> You should never *spread* a translator object (`{...translate({})}`) because it is a proxy. 
 
 ## API
 

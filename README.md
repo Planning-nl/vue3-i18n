@@ -50,7 +50,7 @@ export default defineComponent({
 </template>
 ```
 
-> You should never *spread* a translator object (`{...translate({})}`) because the translator is a translating proxy. 
+> You should never *spread* a translator object (`{...translate({})}`) because it is a proxy. 
 
 ```typescript
 import { l, translate } from "@planning.nl/vue3-i18n";

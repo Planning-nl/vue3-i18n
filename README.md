@@ -263,8 +263,8 @@ The typical use case for translations is a fixed static set, as described above.
 
 There are situations however, in which you'll want to dynamically add or change translations:
 - lazy loading for a specific locale
-- overriding the [utility functions in `i18n`](#Utility customization)
-- overriding existing translations for an [external module](#i18n for generic components)
+- overriding the [utility functions](#utility-customization)
+- overriding existing translations for an [external module](#i18n-for-generic-components)
 
 There are a couple of ways to change a translation object:
 1. By directly changing the *raw* definition object

@@ -50,8 +50,7 @@ export default defineComponent({
 </template>
 ```
 
-> Notice that you shouldn't *spread* a translator object in the setup (`{...translate(..)}`) 
-> If it contains translatable items on the root level, those will only be translated once initially.
+> You should never *spread* a translator object (`{...translate({})}`) because the translator is a translating proxy. 
 
 ```typescript
 import { l, translate } from "@planning.nl/vue3-i18n";
@@ -82,12 +81,13 @@ console.log(`${t.hello} ${t.group.world}`); // "👋 🌐"
 
 ### Translation Set
 
-The `translate` function does all the translation magic and produces a *translator*. 
-It expects a nested object that contains all your translations. This entries in this object should either be plain 
-objects (translation groups) or translatable items.
+The `translate` function does all the translation magic and produces a **translator**. 
+
+It expects a nested object that contains your translation items and translations. The entries in this object should 
+either be plain objects (translation groups) or **translatable items**.
 
 Translatable items can be created using the `l` function. It accepts a plain object with translations, keyed by locales.
-The translations can be of any type, not just strings. This gives this library a lot of flexibility. 
+The translation values can be of any type, not just strings. 
  
 ```typescript
 import { l, translate } from "@planning.nl/vue3-i18n";
@@ -114,23 +114,24 @@ The `fallback` can be used to define the translation to be used when no locale m
 
 ### Translation
 
-Fetching a translation can be done by selecting a property on the translator object:
+Fetching a translation can be done by simply traversing the translator object:
 
 ```typescript
 console.log(translations.main.sub);
 console.log(translations.hello);
 ```
 
-When fetching a translation, one of the keys will be selected for which to return the value. The following rules apply:
+When fetching a translation, one of the locale keys will be selected based on the active locales. The associated value 
+will be returned.
+
+The following rules apply:
 
 1. The longest (most parts) key is used that matches the primary locale (`getLocales()[0]`). 
 2. If no such key can be found at all, the secondary, third, ... locale is checked. 
 3. If no locale can be matched, the `fallback` locale key is used.
 4. If `fallback` is not specified, the first specified key is used.
 
-> Locale matching in this module doesn't exactly follow BCP 47. It is simplified for simplicity and performance.
-> In this library, the valid key that has the most parts is selected. BCP 47 would also differentiate between 
-> different types of locale parts but that's seldom used. 
+> Locale matching in this module doesn't *exactly* follow BCP 47. It was simplified for simplicity and performance.
 
 ### Locales
 
@@ -181,9 +182,9 @@ console.log(t.greetings("Evan")); // "Hello dear Evan";
 
 ### Pluralization
 
-Most used languages have the same basic pluralization rules. Nouns come in two forms: singular and plural nouns.
+Most used languages have the same basic pluralization rules: nouns come in two forms (singular and plural).
 
-This modules ships with some helper functions specifically for this pluralization rule:
+For this form of pluralization some helper functions are available:
 * `plural` defines nouns with a singular and plural form
 * `pluralAmount` defines nouns along with an 'amount' quantifier
 
@@ -253,24 +254,24 @@ The `datetimeParts` function will return the result in a `Intl.DateTimeFormatPar
 
 The `ucFirst` function accepts a string and returns the same string with the first character capitalized:
 ```typescript
-console.log(ucFirst("hello"));
+console.log(ucFirst("hello")); // "Hello"
 ```
 
-## Mutations
+### Mutations
 
 The typical use case for translations is a fixed static set, as described above.
 
 There are situations however, in which you'll want to dynamically add or change translations:
 - lazy loading for a specific locale
-- overriding existing translations for an [external module](#i18n for generic components)
 - overriding the [utility functions in `i18n`](#Utility customization)
+- overriding existing translations for an [external module](#i18n for generic components)
 
 There are a couple of ways to change a translation object:
 1. By directly changing the *raw* definition object
 2. By using `patch` or `patchStrict`
 3. By using `patchLocale` or `patchLocaleStrict`
 
-### Raw
+#### Raw
 You can change an existing translations set directly by changing the *raw* definition object. That can be obtained from 
 a translator using the `_raw` property, which is a reference to the raw translations object.
 
@@ -302,7 +303,7 @@ t._raw.group.world.locales.fallback = "🌎";
 
 When you have to add locales to a large translations set this quickly becomes tedious.
 
-### `patch`
+#### `patch`
 
 The patch object allows an existing translator set to be *patched* with additions and changes using a translations 
 object of the same structure.
@@ -334,7 +335,7 @@ patchStrict(t, {
 
 > `patchStrict` simply invokes `patch`. It only has more strict type checking.
 
-### `patchLocale`
+#### `patchLocale`
 When changing a single locale, `patchLocale` provides an even cleaner syntax:
 
 ```typescript
@@ -396,7 +397,7 @@ This is probably not what you want.
 
 You can can use `keyof typeof translations["_raw"]` to get to the 'real' keys.
 
-## i18n for generic components
+### i18n for generic components
 
 This lightweight module is perfect for providing i18n in generic component modules.
 

@@ -10,13 +10,13 @@ This is a lightweight and type safe i18n library for [Vue 3](https://github.com/
 
 ## Why Vue3-i18n?
 * Simple, easy to understand
-* Flexible enough to handle even complex i18n use cases
-* Ergonomic syntax
-* Locales and translations are reactive (@vue/reactivity)
 * Small in size
+* Ergonomic syntax
 * Fast (translates 3M items per second)
-* Type safety
+* Flexible and extensible
+* Type safe
 * IDE features such as *find usages* and *rename*
+* Locales and translations are reactive (@vue/reactivity)
 * Provides extensible translations for modules and libraries
 
 ## Installation
@@ -84,7 +84,7 @@ console.log(`${t.hello} ${t.group.world}`); // "👋 🌐"
 The `translate` function does all the translation magic and produces a **translator**. 
 
 It expects a nested object that contains your translation items and translations. The entries in this object should 
-either be plain objects (translation groups) or **translatable items**.
+either be plain objects (translation groups) or **translation items**.
 
 Translatable items can be created using the `l` function. It accepts a plain object with translations, keyed by locales.
 The translation values can be of any type, not just strings. 
@@ -117,8 +117,9 @@ The `fallback` can be used to define the translation to be used when no locale m
 Fetching a translation can be done by simply traversing the translator object:
 
 ```typescript
-console.log(translations.main.sub);
-console.log(translations.hello);
+locales.value = ["nl"];
+console.log(translations.main.sub); // "sub"
+console.log(translations.hello); // "hallo"
 ```
 
 When fetching a translation, one of the locale keys will be selected based on the active locales. The associated value 
@@ -126,17 +127,16 @@ will be returned.
 
 The following rules apply:
 
-1. The longest (most parts) key is used that matches the primary locale (`getLocales()[0]`). 
-2. If no such key can be found at all, the secondary, third, ... locale is checked. 
+1. The key is used that has the most parts and matches the primary locale (`getLocales()[0]`). 
+2. If no such key can be found at all, the secondary, third, ... entry in `getLocales()` is checked. 
 3. If no locale can be matched, the `fallback` locale key is used.
-4. If `fallback` is not specified, the first specified key is used.
+4. If `fallback` is not specified, the first specified locale key is used.
 
 > Locale matching in this module doesn't *exactly* follow BCP 47. It was simplified for simplicity and performance.
 
 ### Locales
 
-The `getLocales()` function returns the array of currently active locales.
-Internally, it returns a concatenated array of:
+The `getLocales()` function returns the array of currently active locales. It returns a concatenated array of:
 - `locales`
 - `navigator.languages`
 - `fallbackLocales`
@@ -156,7 +156,7 @@ const hallo = withLocales(["nl", "en-US"], () => t.hello);
 ```
 
 > `withLocales` is especially handy when a value needs to be fetched for another locale than the current one. For
-> example, consider the language selector widget which usually contains a description in the target language itself.
+> example a language selector widget usually contains a description in the target language itself.
 
 ### String format patterns
 Most i18n frameworks allow special patterns in translation strings as *placeholders* or *references* to other translations.
@@ -182,7 +182,7 @@ console.log(t.greetings("Evan")); // "Hello dear Evan";
 
 ### Pluralization
 
-Most used languages have the same basic pluralization rules: nouns come in two forms (singular and plural).
+Most used languages have the same basic pluralization rules: *nouns* come in two forms (singular and plural).
 
 For this form of pluralization some helper functions are available:
 * `plural` defines nouns with a singular and plural form
@@ -208,12 +208,12 @@ console.log(t.cost(10.55)); // 10.55 euros
 ```
 
 > You may prefer another method of pluralization, or you may need another plural rules for a specific locale. In that 
-> case you can add and use your own pluralization functions.
+> case you can create and use your own pluralization functions.
 
 ### Number
 
 You can use the `number` function to format a number. This library relies on the `Intl.NumberFormat` browser 
-functionality for locale-aware number formatting.
+feature for locale-aware number formatting.
  
 The `number` function accepts a number and additional [Intl.NumberFormatOptions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat) number format options. 
 
@@ -226,7 +226,7 @@ The `numberParts` returns the result in a `Intl.NumberFormatPart` array.
 ### Datetime
 
 You can use the `datetime` function to format a date. This library relies on the `Intl.DateTimeFormat` browser 
-functionality.
+feature.
 
 This module allows a way to override/add custom datetime *formats*:
 
@@ -253,18 +253,21 @@ The `datetimeParts` function will return the result in a `Intl.DateTimeFormatPar
 ### ucFirst
 
 The `ucFirst` function accepts a string and returns the same string with the first character capitalized:
+
 ```typescript
 console.log(ucFirst("hello")); // "Hello"
 ```
 
+> As simple as capitalization seems, it is actually a [locale-dependent](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toLocaleUpperCase).
+
 ### Mutations
 
-The typical use case for translations is a fixed static set, as described above.
+The typical use case for i18n is a fixed static translations set.
 
 There are situations however, in which you'll want to dynamically add or change translations:
 - lazy loading for a specific locale
 - overriding the [utility functions](#utility-customization)
-- overriding existing translations for an [external module](#i18n-for-generic-components)
+- overriding existing translations for an [external libraries](#i18n-for-libraries)
 
 There are a couple of ways to change a translation object:
 1. By directly changing the *raw* definition object
@@ -273,7 +276,8 @@ There are a couple of ways to change a translation object:
 
 #### Raw
 You can change an existing translations set directly by changing the *raw* definition object. That can be obtained from 
-a translator using the `_raw` property, which is a reference to the raw translations object.
+a translator using the `_raw` property, which is a reference to the translations object that was originally passed to 
+`translate`.
 
 ```typescript
 const obj = {
@@ -308,7 +312,7 @@ When you have to add locales to a large translations set this quickly becomes te
 The patch object allows an existing translator set to be *patched* with additions and changes using a translations 
 object of the same structure.
 
-This usually leads to less code and a more readable syntax than changing the raw object manually.
+This usually leads to less and better readable code than changing the raw object manually.
 
 `patch` iterates over both the translations object recursively, and merges the locales for the translatable items:
 
@@ -333,7 +337,7 @@ patchStrict(t, {
 });
 ```
 
-> `patchStrict` simply invokes `patch`. It only has more strict type checking.
+> `patchStrict` simply invokes `patch`. It only has stricter type checking.
 
 #### `patchLocale`
 When changing a single locale, `patchLocale` provides an even cleaner syntax:
@@ -347,8 +351,8 @@ patchLocale(t, "fr", {
 });
 ```
 
-Furthermore, you don't need to use the `l` function but simply a value. This makes it a better choice for lazy loading 
-translations.
+Furthermore, you don't need to use the `l` function but simply a value. This makes it a better choice for processing
+lazy loaded translations.
 
 **`patchLocaleStrict`** enforces that all items are specified.
 
@@ -377,8 +381,8 @@ console.log(number(99999.123)); // 99999,123
 > Notice that `number` and `datetime` simply concatenate the parts returned by `numberParts` and `datetimeParts`.
 
 ### Reactive translation objects
-If you have a dynmically changing translations object and need it to be reactive, wrap the object into `reactive` before 
-passing it to `translate`:
+If you have a translations object that will change dynamically, wrap the object into `reactive` before passing it to 
+`translate`:
 
 ```typescript
 const reactiveTranslations = translate(reactive({} as any));
@@ -397,11 +401,11 @@ This is probably not what you want.
 
 You can can use `keyof typeof translations["_raw"]` to get to the 'real' keys.
 
-### i18n for generic components
+### i18n for libraries
 
-This lightweight module is perfect for providing i18n in generic component modules.
+This lightweight module is also intended for providing i18n in Vue3 libraries and generic components.
 
-Define your translations in a seperate file and export it as part of your module. Then import the translations into your 
+You should define your translations in a seperate file and export it as part of your module. Then import the translations into your 
 component(s) and use them where you need them. Add translations for the locales that you wish to ship with your module.
 
 Add a `peerDependency` and `devDependency` towards `@planning/vue3-i18n` to ensure that module is installed (only once).
@@ -409,15 +413,15 @@ Add a `peerDependency` and `devDependency` towards `@planning/vue3-i18n` to ensu
 This enables applications using your component to *patch* the translation set with additional locales, or even to 
 override the defaults that you have set.
 
-Better still, `patchStrict` / `patchLocaleStrict` enforces that **all** translation items are translated. If you add a 
-new key to your module, your users, after upgrading, will receive a typescript error which forces them to provide 
-translations for their own locales as well.
+Even better, `patchStrict` / `patchLocaleStrict` enforces that **all** translation items are translated. If you add a 
+new key to your module, the depending applications, after upgrading, will receive a typescript error which forces them to 
+provide translations for their own locales as well.
 
 ## Browser support
 
-Browser support for this module matches Vue3 browser support.
+Browser support for this module matches Vue3 browser support. 
 
-> This module relies on `Proxy`, which means that IE11 is not supported.
+This module relies on `Proxy`, which means that IE11 is not supported.
 
 ## License
 [Apache](https://opensource.org/licenses/Apache-2.0)

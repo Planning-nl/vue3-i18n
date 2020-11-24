@@ -258,7 +258,7 @@ The `ucFirst` function accepts a string and returns the same string with the fir
 console.log(ucFirst("hello")); // "Hello"
 ```
 
-> As simple as capitalization seems, it is actually a [locale-dependent](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toLocaleUpperCase).
+> As simple as capitalization seems, it is actually [locale-dependent](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toLocaleUpperCase).
 
 ### Mutations
 

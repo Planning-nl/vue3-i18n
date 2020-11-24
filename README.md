@@ -17,6 +17,7 @@ This is a lightweight and type safe i18n library for [Vue 3](https://github.com/
 * Fast (translates 3M items per second)
 * Type safety
 * IDE features such as *find usages* and *rename*
+* Provides extensible translations for modules and libraries
 
 ## Installation
 
@@ -49,7 +50,7 @@ export default defineComponent({
 </template>
 ```
 
-> Notice that you shouldn't *spread* your translator in the setup (`{...translate(..)}`) 
+> Notice that you shouldn't *spread* a translator object in the setup (`{...translate(..)}`) 
 > If it contains translatable items on the root level, those will only be translated once initially.
 
 ```typescript
@@ -104,21 +105,45 @@ const translations = translate({
 })
 ```
 
-A locale key is a string. It can contain a multiple parts, separated by `-` symbols. The first group represents the 
-language, the second group the region and the third group a possible variant. 
+A locale key is a string. It is made up of parts, separated by `-` symbols. The first part represents the language, the 
+second group the region and the third group a possible variant. 
 
 The `fallback` can be used to define the translation to be used when no locale matches. 
 
 > Locale formats are defined in the [BCP 47](https://en.wikipedia.org/wiki/IETF_language_tag) locale code.
 
-### Locales
-Locales can be set using the exported `locales` ref. It accepts an array of strings or the default value `undefined` 
-(in which case it uses `navigator.languages` instead).
+### Translation
 
-The first locale is the primary one. Only if no translation can be found for it, the next locale in the list will be
-checked (and so on).
+Fetching a translation can be done by selecting a property on the translator object:
+
+```typescript
+console.log(translations.main.sub);
+console.log(translations.hello);
+```
+
+When fetching a translation, one of the keys will be selected for which to return the value. The following rules apply:
+
+1. The longest (most parts) key is used that matches the primary locale (`getLocales()[0]`). 
+2. If no such key can be found at all, the secondary, third, ... locale is checked. 
+3. If no locale can be matched, the `fallback` locale key is used.
+4. If `fallback` is not specified, the first specified key is used.
+
+> Locale matching in this module doesn't exactly follow BCP 47. It is simplified for simplicity and performance.
+> In this library, the valid key that has the most parts is selected. BCP 47 would also differentiate between 
+> different types of locale parts but that's seldom used. 
+
+### Locales
 
 The `getLocales()` function returns the array of currently active locales.
+Internally, it returns a concatenated array of:
+- `locales`
+- `navigator.languages`
+- `fallbackLocales`
+
+The `locales` ref allows you to overrule the browser's locale (a custom language selector).
+
+The `fallbackLocales` ref can be handy if you wish to use the browser's locale. If the visitor doesn't have a supported 
+locale, you can provide a fallback. This has been set to `["en"]` by default.
 
 ### Locale overriding
 
@@ -131,69 +156,6 @@ const hallo = withLocales(["nl", "en-US"], () => t.hello);
 
 > `withLocales` is especially handy when a value needs to be fetched for another locale than the current one. For
 > example, consider the language selector widget which usually contains a description in the target language itself.
-
-### Translation
-
-When fetching a translation, one of the keys will be selected for which to return the value. The following rules apply:
-
-1. The longest (most parts) key is used that matches the current primary locale. 
-2. If no such key can be found at all, the secondary, third, ... locale is checked. 
-3. If no locale can be matched, the `fallback` key is used.
-4. If `fallback` is not specified, the first specified key is used.
-
-> Locale matching in this module doesn't exactly follow BCP 47. It is simplified for simplicity and performance.
-> This is usually not important unless you want to distinguish between multiple scripts (for example `sr-Latn-SR` and 
-> `sr-Cyrl-SR`). 
-
-### Patching
-The `patch` function allows you to conveniently change translations of an existing translator object.
-
-It iterates over both the translations object recursively, and merges the locales for the translatable items.
-
-Using the patch function ensures that all translation items have been specified. If some keys have not been specified a 
-typescript error will occur. This makes sure you didn't forget one.
-
-There are two ways to ignore unspecified properties:
-1. By specifying the property value `undefined`, it will ignore it completely.
-2. By using `patchPartial`, which allows optional keys.
-
-> Although patching is the advised method of changing a translations set, it's also possible to change the translations 
-> object directly. Use the `_raw` property to obtain a reference to it.
-
-```typescript
-const t = translate({
-    multi: {
-        main: l({
-            "de-DE-BY": "Bayern",
-            "de-DE": "Deutsch",
-        }),
-    },
-});
-
-locales.value = ["de-DE-NW"];
-console.log(t.main); // Deutsch
-
-patch(t, {
-    multi: {
-        main: l({
-            "de-DE-NW": "Nordrhein Westfalen",
-        }),
-    },
-});
-
-locales.value = ["de-DE-NW"];
-console.log(t.main); // Nordrhein Westfalen
-```
-
-When changing a single locale, `patchLocale` (or `patchLocalePartial`) provides a cleaner syntax:
-
-```typescript
-patchLocale(t, "nl", { 
-    multi: { 
-        main: "Nederlands" 
-    }
-});
-```
 
 ### String format patterns
 Most i18n frameworks allow special patterns in translation strings as *placeholders* or *references* to other translations.
@@ -247,32 +209,22 @@ console.log(t.cost(10.55)); // 10.55 euros
 > You may prefer another method of pluralization, or you may need another plural rules for a specific locale. In that 
 > case you can add and use your own pluralization functions.
 
-## i18n utils
-
-The `i18n` object contains some locale-aware formatting functions. You can supply them in the setup function of a 
-component and use them in your template.
-
-> Include the full object in your setup return value, and **don't spread it**. When spreading, the utility functions 
-> will lose their locale awareness.
-
 ### Number
 
-You can use the `i18n.number` function to format a number. This library relies on the `Intl.NumberFormat` browser 
+You can use the `number` function to format a number. This library relies on the `Intl.NumberFormat` browser 
 functionality for locale-aware number formatting.
  
-The `i18n.number` function accepts a number and additional [Intl.NumberFormatOptions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat) number format options. 
+The `number` function accepts a number and additional [Intl.NumberFormatOptions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat) number format options. 
 
 ```typescript
-console.log(i18n.number(10, { style: 'currency', currency: 'EUR' }));
+console.log(number(10, { style: 'currency', currency: 'EUR' }));
 ```
 
-The `i18n.numberParts` returns the result in a `Intl.NumberFormatPart` array.
+The `numberParts` returns the result in a `Intl.NumberFormatPart` array.
 
-> You can also patch these utility functions to extend them for languages that don't follow these patterns.
- 
 ### Datetime
 
-You can use the `i18n.datetime` function to format a date. This library relies on the `Intl.DateTimeFormat` browser 
+You can use the `datetime` function to format a date. This library relies on the `Intl.DateTimeFormat` browser 
 functionality.
 
 This module allows a way to override/add custom datetime *formats*:
@@ -295,33 +247,133 @@ console.log(datetime(new Date(), "long"));
 console.log(datetime(new Date(), "custom", { weekday: "long" }));
 ```
 
-The `i18n.datetimeParts` function will return the result in a `Intl.DateTimeFormatPart` array.
-
-> You can also patch these utility functions to extend them for languages that don't follow these patterns.
+The `datetimeParts` function will return the result in a `Intl.DateTimeFormatPart` array.
 
 ### ucFirst
 
 The `ucFirst` function accepts a string and returns the same string with the first character capitalized:
 ```typescript
-console.log(i18n.ucFirst("hello"));
+console.log(ucFirst("hello"));
 ```
 
-## i18n for generic components
+## Mutations
 
-This lightweight module is perfect for providing i18n in generic component modules.
+The typical use case for translations is a fixed static set, as described above.
 
-Define your translations in a seperate file and export it as part of your module. Then import the translations into your 
-component(s) and use them where you need them. Add translations for the locales that you wish to ship with your module.
+There are situations however, in which you'll want to dynamically add or change translations:
+- lazy loading for a specific locale
+- overriding existing translations for an [external module](#i18n for generic components)
+- overriding the [utility functions in `i18n`](#Utility customization)
 
-Add a `peerDependency` and `devDependency` towards `@planning/vue3-i18n` to ensure that module is installed (only once).
+There are a couple of ways to change a translation object:
+1. By directly changing the *raw* definition object
+2. By using `patch` or `patchStrict`
+3. By using `patchLocale` or `patchLocaleStrict`
 
-This enables applications using your component to `patch` the translation set with additional locales, or even to 
-override the defaults that you have set.
+### Raw
+You can change an existing translations set directly by changing the *raw* definition object. That can be obtained from 
+a translator using the `_raw` property, which is a reference to the raw translations object.
 
-Better still, `patch` enforces that *all messages* are translated. If you add a new message in an update, your users 
-will receive a typescript error which forces them to provide translations for their own locales.
+```typescript
+const obj = {
+    hello: l({
+        en: "hello",
+        nl: "hallo",
+        fallback: "👋",
+    }),
+    group: {
+        world: l({
+            en: "world",
+            nl: "wereld",
+            fallback: "🌍"
+        })
+    }
+}
+const t = translate(obj);
+
+// Notice that obj === t._raw
+
+t._raw.hello.locales["fr"] = "bonjour";
+t._raw.hello.locales["de"] = "hallo";
+t._raw.group.world.locales["fr"] = "monde";
+t._raw.group.world.locales["de"] = "Welt";
+t._raw.group.world.locales.fallback = "🌎";
+```
+
+When you have to add locales to a large translations set this quickly becomes tedious.
+
+### `patch`
+
+The patch object allows an existing translator set to be *patched* with additions and changes using a translations 
+object of the same structure.
+
+This usually leads to less code and a more readable syntax than changing the raw object manually.
+
+`patch` iterates over both the translations object recursively, and merges the locales for the translatable items:
+
+```typescript
+patch(t, {
+    hello: l({ fr: "bonjour", de: "hallo" }),
+    group: {
+        world: { fr: "monde", de: "Welt", fallback: "🌎" }
+    }
+});
+```
+
+Using the **`patchStrict`** function ensures that all translation items have been specified. If some keys have not been 
+specified a typescript error will occur. This makes sure you didn't forget one.
+
+You can explicitly ignore a part of the translations set by setting it as `undefined`:
+
+```typescript
+patchStrict(t, {
+    hello: l({ it: "ciao" }),
+    group: undefined
+});
+```
+
+> `patchStrict` simply invokes `patch`. It only has more strict type checking.
+
+### `patchLocale`
+When changing a single locale, `patchLocale` provides an even cleaner syntax:
+
+```typescript
+patchLocale(t, "fr", { 
+    hello: "bonjour",
+    group: {
+        world: "monde"
+    }
+});
+```
+
+Furthermore, you don't need to use the `l` function but simply a value. This makes it a better choice for lazy loading 
+translations.
+
+**`patchLocaleStrict`** enforces that all items are specified.
 
 ## Advanced use cases
+
+### Utility customization
+
+The `numberParts`, `datetimeParts` and `ucFirst` utility functions can be localized.
+
+They are defined in a translator object which is exposed as `i18n`. 
+
+It's possible to provide your own implementation (for a specific locale):
+
+```typescript
+const wrapped = withLocales(["nl"], () => i18n.numberParts);
+patchLocale(i18n, "nl", {
+    numberParts: (v, o) => {
+        const parts = wrapped(v, o);
+        return parts.filter((p) => p.type !== "group");
+    },
+});
+locales.value = ["nl"];
+console.log(number(99999.123)); // 99999,123
+```
+
+> Notice that `number` and `datetime` simply concatenate the parts returned by `numberParts` and `datetimeParts`.
 
 ### Reactive translation objects
 If you have a dynmically changing translations object and need it to be reactive, wrap the object into `reactive` before 
@@ -344,26 +396,21 @@ This is probably not what you want.
 
 You can can use `keyof typeof translations["_raw"]` to get to the 'real' keys.
 
-### Utility localization
+## i18n for generic components
 
-The `number`, `numberParts`, `datetime`, `datetimeParts` and `ucFirst` utility functions can be localized. 
+This lightweight module is perfect for providing i18n in generic component modules.
 
-Imagine that you're not happy with the Intl functionality (or it isn't supported), then you can provide your own 
-implementation for a specific locale:
+Define your translations in a seperate file and export it as part of your module. Then import the translations into your 
+component(s) and use them where you need them. Add translations for the locales that you wish to ship with your module.
 
-```typescript
-patchLocalePartial(i18n, "nl-NL", {
-    number: (v, options) => {
-        return `number[${v}]`;
-    },
-    datetime: (d, m, e) => {
-        return `[${prev(d, m, e)}]`;
-    },
-    ucFirst: (v) => {
-        return 'something else'
-    }
-});
-```
+Add a `peerDependency` and `devDependency` towards `@planning/vue3-i18n` to ensure that module is installed (only once).
+
+This enables applications using your component to *patch* the translation set with additional locales, or even to 
+override the defaults that you have set.
+
+Better still, `patchStrict` / `patchLocaleStrict` enforces that **all** translation items are translated. If you add a 
+new key to your module, your users, after upgrading, will receive a typescript error which forces them to provide 
+translations for their own locales as well.
 
 ## Browser support
 

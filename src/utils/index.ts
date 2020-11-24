@@ -1,12 +1,6 @@
-import { number, numberParts } from "./number";
-import { ucFirst } from "./ucFirst";
-import { datetime, datetimeParts } from "./datetime";
-import { translate } from "../translator";
+import { Mode, DateTimeFormatOptions } from "./datetime";
 
-export const i18n = translate({
-    number,
-    numberParts,
-    ucFirst,
-    datetime,
-    datetimeParts,
-});
+export { i18n } from "./i18n";
+export { number, numberParts } from "./number";
+export { datetime, datetimeParts, Mode, DateTimeFormatOptions } from "./datetime";
+export { ucFirst } from "./ucFirst";

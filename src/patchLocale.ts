@@ -12,17 +12,17 @@ export function patchLocale<T extends Translations>(
     });
 }
 
-export function patchLocalePartial<T extends Translations>(
+export function patchLocaleStrict<T extends Translations>(
     item: Translator<T>,
     locale: string | undefined,
-    patches: PartialPatchLocaleObject<T>,
+    patches: StrictPatchLocaleObject<T>,
 ): void {
     withLocales([locale || getPrimaryLocale()], () => {
         patchLocaleData(item._raw, patches);
     });
 }
 
-function patchLocaleData<T extends Translations>(item: T, patches: PartialPatchLocaleObject<T>): void {
+function patchLocaleData<T extends Translations>(item: T, patches: PatchLocaleObject<T>): void {
     for (const [key, newValue] of Object.entries(patches)) {
         if (newValue !== undefined) {
             const currValue = item[key as keyof T];
@@ -42,16 +42,20 @@ function patchLocaleData<T extends Translations>(item: T, patches: PartialPatchL
     }
 }
 
-export type PartialPatchLocaleObject<T extends Translations> = {
+export type PatchLocaleObject<T extends Translations> = {
     [P in keyof T]?: T[P] extends TranslatableItem<infer LI>
         ? LI
         : T[P] extends Translations
-        ? PartialPatchLocaleObject<T[P]>
+        ? PatchLocaleObject<T[P]>
         : never;
 };
 
-export type PatchLocaleObject<T extends Translations> = {
+export type StrictPatchLocaleObject<T extends Translations> = {
     [P in keyof T]:
         | undefined
-        | (T[P] extends TranslatableItem<infer LI> ? LI : T[P] extends Translations ? PatchLocaleObject<T[P]> : never);
+        | (T[P] extends TranslatableItem<infer LI>
+              ? LI
+              : T[P] extends Translations
+              ? StrictPatchLocaleObject<T[P]>
+              : never);
 };

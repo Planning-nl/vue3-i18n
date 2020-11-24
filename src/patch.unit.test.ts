@@ -1,7 +1,7 @@
 import { translate } from "./translator";
 import { l } from "./translation";
 import { locales, withLocales } from "./locales";
-import { patch, patchPartial } from "./patch";
+import { patch, patchStrict } from "./patch";
 
 describe("patch", () => {
     test("basic", () => {
@@ -19,7 +19,7 @@ describe("patch", () => {
         expect(withLocales(["de-DE-NW"], () => T.main)).toBe("Deutsch");
         expect(withLocales(["fr-BE"], () => T.main)).toBe("-");
 
-        patch(T, {
+        patchStrict(T, {
             main: l({
                 nl: "Nederlands 2",
                 "de-DE-NW": "Nordrhein Westfalen",
@@ -44,7 +44,7 @@ describe("patch", () => {
         expect(withLocales(["nl"], () => T.multi.sub)).toBe("Nederlands");
         expect(withLocales(["de"], () => T.multi.sub)).toBe("?");
 
-        patch(T, {
+        patchStrict(T, {
             multi: {
                 sub: l({ de: "Deutsch" }),
             },
@@ -65,7 +65,7 @@ describe("patch", () => {
         });
 
         expect(withLocales(["de-DE-BY"], () => T.main)).toBe("Bayern");
-        patch(T, { main: l({ "de-DE-BY": undefined }) });
+        patchStrict(T, { main: l({ "de-DE-BY": undefined }) });
         expect(withLocales(["de-DE-BY"], () => T.main)).toBe("Deutsch");
     });
 
@@ -93,7 +93,7 @@ describe("patch", () => {
         expect(T.hello).toBe("Hallo");
         expect(T.multi.sub).toBe("Nederlands");
 
-        patchPartial(T, {
+        patch(T, {
             main: l({
                 nl: "Nederlands 2",
                 "de-DE-NW": "Nordrhein Westfalen",

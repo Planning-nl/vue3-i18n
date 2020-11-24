@@ -1,6 +1,6 @@
 import { translate } from "./translator";
 import { l, TranslatableItem } from "./translation";
-import { patchLocale, patchLocalePartial } from "./patchLocale";
+import { patchLocale, patchLocaleStrict } from "./patchLocale";
 import { locales, withLocales } from "./locales";
 
 describe("patchLocale", () => {
@@ -12,7 +12,7 @@ describe("patchLocale", () => {
             },
         });
 
-        patchLocale(T, "en", {
+        patchLocaleStrict(T, "en", {
             hello: "hello",
             sub: {
                 world: "world",
@@ -30,7 +30,7 @@ describe("patchLocale", () => {
             }),
         });
 
-        patchLocale(T, "fallback", {
+        patchLocaleStrict(T, "fallback", {
             new: "new",
         } as any);
 
@@ -44,7 +44,7 @@ describe("patchLocale", () => {
             }),
         });
 
-        patchLocale(T, "fallback", {
+        patchLocaleStrict(T, "fallback", {
             main: "other",
         });
 
@@ -61,7 +61,7 @@ describe("patchLocale", () => {
             }),
         });
 
-        patchLocalePartial(T, "fallback", {
+        patchLocale(T, "fallback", {
             one: "other",
         });
 

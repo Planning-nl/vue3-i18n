@@ -10,7 +10,7 @@ describe("Localizer", () => {
     });
 
     afterEach(() => {
-        locales.value = undefined;
+        locales.value = [];
     });
 
     describe("locale matching", () => {
@@ -82,6 +82,7 @@ describe("Localizer", () => {
                 }),
                 sub: {
                     a: l({ fallback: "sub a generic", en: "sub a en", nl: "sub a nl" }),
+                    b: l({ fallback: "fallback b" }),
                 },
             },
             all: l({ en: "all", fr: "tous", nl: "alle" }),
@@ -104,7 +105,7 @@ describe("Localizer", () => {
 
         test("fallback locale", () => {
             locales.value = ["it"];
-            expect(t(L.main.sub.a)).toBe(L.main.sub.a.locales.fallback);
+            expect(t(L.main.sub.b)).toBe(L.main.sub.b.locales.fallback);
         });
 
         test("first locale locale", () => {

@@ -124,6 +124,20 @@ describe("Localizer", () => {
 
             expect(setupVars.main.value).toBe("main nl");
         });
+
+        test("keys", () => {
+            expect(Object.keys(translate(L))).toEqual(["main", "all"]);
+            expect(Object.getOwnPropertyNames(translate(L))).toEqual(["main", "all"]);
+            expect(Object.keys(translate(L).main)).toEqual(["value", "sub"]);
+        });
+
+        test("enumeration", () => {
+            const keys = [];
+            for (const key in translate(L)) {
+                keys.push(key);
+            }
+            expect(keys).toEqual(["main", "all"]);
+        });
     });
 
     test("patterns", () => {

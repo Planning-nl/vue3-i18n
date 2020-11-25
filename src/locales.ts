@@ -5,8 +5,12 @@ export const fallbackLocales = ref<string[]>(["en"]);
 const forceLocales = ref<string[] | undefined>();
 
 const orderedLocales = computed(() => {
-    return locales.value.concat(navigator.languages).concat(fallbackLocales.value);
+    return locales.value.concat(getNavigatorLanguages()).concat(fallbackLocales.value);
 });
+
+export function getNavigatorLanguages() {
+    return typeof navigator !== "undefined" ? navigator.languages : [];
+}
 
 export function getLocales(): Readonly<string[]> {
     return forceLocales.value ?? orderedLocales.value;

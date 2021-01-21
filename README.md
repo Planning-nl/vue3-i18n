@@ -1,23 +1,21 @@
 # Vue3-i18n
  
-This is a lightweight and type safe i18n library for [Vue 3](https://github.com/vuejs/vue-next) applications.
+This is a lightweight and typesafe frontend internationalization library for [Vue 3](https://github.com/vuejs/vue-next) applications.
 
 ## Basic Features
 * define **translation objects**
 * get and set the **active locale(s)** 
-* use these translations using compact syntax
-* mutate existing translation objects
+* compact syntax for usage in vue templates
 
 ## Why Vue3-i18n?
-* Simple, easy to understand
-* Small in size
+* Simple, small and easy to understand
 * Ergonomic syntax
 * Fast (translates 3M items per second)
 * Flexible and extensible
-* Type safe
+* Typesafe
 * IDE features such as *find usages* and *rename*
 * Locales and translations are reactive (@vue/reactivity)
-* Provides extensible translations for modules and libraries
+* Extensible translations for modules and libraries
 
 ## Installation
 
@@ -183,9 +181,11 @@ locales.value = ["en"];
 console.log(t.greetings("Evan")); // "Hello dear Evan";
 ```
 
+> The usage of functions means that back-references can't be transmitted using json. This library is thus not intended for complex translations provided by a backend, unless you build a pattern-to-function converter yourself.
+
 ### Pluralization
 
-Most used languages have the same basic pluralization rules: *nouns* come in two forms (singular and plural).
+The grammatical rules about pluralization may differ between languages. But many languages (including English) share the rule that *nouns* come in just two forms: *singular* and *plural*.
 
 For this form of pluralization some helper functions are available:
 * `plural` defines nouns with a singular and plural form
@@ -210,8 +210,7 @@ console.log(t.cost()); // one euro
 console.log(t.cost(10.55)); // 10.55 euros
 ```
 
-> You may prefer another method of pluralization, or you may need another plural rules for a specific locale. In that 
-> case you can create and use your own pluralization functions.
+> You may prefer another method of pluralization, or you may need another plural rules for a specific locale. In that case you can create and use your own pluralization functions.
 
 ### Number
 
@@ -261,16 +260,16 @@ The `ucFirst` function accepts a string and returns the same string with the fir
 console.log(ucFirst("hello")); // "Hello"
 ```
 
-> As simple as capitalization seems, it is actually [locale-dependent](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toLocaleUpperCase).
+> Capitalization is [locale-dependent](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toLocaleUpperCase).
 
 ### Mutations
 
-The typical use case for i18n is a fixed static translations set.
+The typical use case for vue3-i18n is a static translations set.
 
-There are situations however, in which you'll want to dynamically add or change translations:
-- lazy loading for a specific locale
+But there are situations where it is useful to dynamically add or change translations:
+- injecting translations asyncronously (XHR)
 - overriding the [utility functions](#utility-customization)
-- overriding existing translations for an [external libraries](#i18n-for-libraries)
+- overriding existing translations for [external libraries](#i18n-for-libraries)
 
 There are a couple of ways to change a translation object:
 1. By directly changing the *raw* definition object
@@ -321,12 +320,17 @@ This usually leads to less and better readable code than changing the raw object
 
 ```typescript
 patch(t, {
-    hello: l({ fr: "bonjour", de: "hallo" }),
-    group: {
-        world: { fr: "monde", de: "Welt", fallback: "🌎" }
-    }
+    hello: l({ fr: "bonjour", de: "hallo" })
 });
 ```
+
+As translations set are recursive structures, you can also patch a nested element:
+```typescript
+patch(t.group, {
+    world: l({ fr: "monde", de: "Welt", fallback: "🌎" })
+});
+```
+#### `patchStrict`
 
 Using the **`patchStrict`** function ensures that all translation items have been specified. If some keys have not been 
 specified a typescript error will occur. This makes sure you didn't forget one.
@@ -357,6 +361,7 @@ patchLocale(t, "fr", {
 Furthermore, you don't need to use the `l` function but simply a value. This makes it a better choice for processing
 lazy loaded translations.
 
+#### `patchLocaleStrict`
 **`patchLocaleStrict`** enforces that all items are specified.
 
 ## Advanced use cases

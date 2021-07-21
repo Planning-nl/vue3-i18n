@@ -1,7 +1,7 @@
 import { l, TranslatableItem } from "./translation";
 import { translate } from "./translator";
 import { locales, withLocales } from "./locales";
-import { reactive } from "@vue/reactivity";
+import { reactive } from "vue";
 
 describe("translator", () => {
     function getBase() {

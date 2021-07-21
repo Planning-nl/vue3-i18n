@@ -144,8 +144,8 @@ describe("Localizer", () => {
         const translations = {
             dear: l({ en: "dear", nl: "beste" }),
             greetings: l({
-                en: (name: string) => `Hello ${t.dear} ${name}`,
-                nl: (name: string) => `Hallo ${t.dear} ${name}`,
+                en: (name: string): string => `Hello ${t.dear} ${name}`,
+                nl: (name: string): string => `Hallo ${t.dear} ${name}`,
             }),
         };
 

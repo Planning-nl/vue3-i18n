@@ -1,4 +1,4 @@
-import { computed, ref } from "@vue/reactivity";
+import { computed, ref } from "vue";
 
 export const locales = ref<string[]>([]);
 export const fallbackLocales = ref<string[]>(["en"]);
@@ -8,7 +8,7 @@ const orderedLocales = computed(() => {
     return locales.value.concat(getNavigatorLanguages()).concat(fallbackLocales.value);
 });
 
-export function getNavigatorLanguages() {
+export function getNavigatorLanguages(): readonly string[] {
     return typeof navigator !== "undefined" ? navigator.languages : [];
 }
 

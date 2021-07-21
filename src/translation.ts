@@ -1,5 +1,5 @@
 import { getLocales } from "./locales";
-import { shallowReactive } from "@vue/reactivity";
+import { shallowReactive } from "vue";
 
 export type Translations = { [key: string]: TranslatableItem<any> | Translations };
 

@@ -1,14 +1,14 @@
-import { dateTimeFormats, datetime, datetimeParts } from "./datetime";
+import { dateTimeFormats, datetime, datetimeParts, DateTimeFormatOptions } from "./datetime";
 import { getLocales, locales } from "../locales";
 import { patch } from "../patch";
 import { l } from "../translation";
 import { patchLocale } from "../patchLocale";
-import { i18n } from "./index";
+import { i18n } from "./i18n";
 
 describe("formatDate", () => {
     test("formats", () => {
-        patch(dateTimeFormats, {
-            long: l({
+        const patches = {
+            long: l<DateTimeFormatOptions>({
                 "en-US": {
                     year: "numeric",
                     month: "short",
@@ -27,7 +27,9 @@ describe("formatDate", () => {
                     hour12: true,
                 },
             }),
-        });
+        };
+
+        patch(dateTimeFormats, patches);
 
         patchLocale(dateTimeFormats, "en", {
             custom: { weekday: "long" },
